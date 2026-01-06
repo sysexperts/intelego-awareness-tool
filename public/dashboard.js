@@ -318,15 +318,24 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
                 <p><strong>Klickrate:</strong> ${data.analysis.overview.clickRate}%</p>
                 <p><strong>Erfolgsquote:</strong> ${data.analysis.overview.successRate}%</p>
                 ${data.emailSent ? '<p>✓ E-Mail wurde versendet</p>' : ''}
-                <a href="${data.pdfPath}" class="btn btn-primary" style="margin-top: 10px;">PDF herunterladen</a>
+                <p style="margin-top: 10px;">Weiterleitung zu Reports...</p>
             `;
             
             document.getElementById('uploadForm').reset();
             
+            // Automatische Weiterleitung zu Reports nach 2 Sekunden
             setTimeout(() => {
-                switchTab('reports');
-                document.querySelector('[onclick="switchTab(\'reports\')"]').click();
-            }, 3000);
+                // Remove active class from all nav items and content
+                document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                // Add active class to reports nav and content
+                document.querySelectorAll('.nav-item')[2].classList.add('active'); // Reports ist der 3. Tab
+                document.getElementById('reportsTab').classList.add('active');
+                
+                // Load reports
+                loadReports();
+            }, 2000);
         } else {
             resultDiv.className = 'alert alert-error';
             resultDiv.innerHTML = `<strong>Fehler:</strong> ${data.error}`;
