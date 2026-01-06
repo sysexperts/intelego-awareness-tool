@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
-const { authenticateToken } = require('../middleware/auth');
 
 // GET email settings
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', (req, res) => {
   db.get('SELECT * FROM email_settings WHERE id = 1', (err, row) => {
     if (err) {
       console.error('Fehler beim Laden der E-Mail-Einstellungen:', err);
@@ -36,7 +35,7 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // POST/UPDATE email settings
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', (req, res) => {
   const { imapHost, imapPort, emailUsername, emailPassword, monitoringFolder, checkInterval, monitoringEnabled } = req.body;
   
   if (!imapHost || !imapPort || !emailUsername || !emailPassword) {
@@ -90,7 +89,7 @@ router.post('/', authenticateToken, (req, res) => {
 });
 
 // POST test email connection
-router.post('/test', authenticateToken, async (req, res) => {
+router.post('/test', async (req, res) => {
   const { imapHost, imapPort, emailUsername, emailPassword, monitoringFolder } = req.body;
   
   if (!imapHost || !imapPort || !emailUsername || !emailPassword) {
