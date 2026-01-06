@@ -7,32 +7,46 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="login-page">
-    <div class="login-container">
-        <div class="login-box">
-            <div class="login-header">
-                <img src="/intelego-logo.png" alt="Intelego Logo" class="logo">
-                <h1>Intelego Awareness Tool</h1>
-                <p>Phishing-Analyse & Reporting</p>
-            </div>
-            
-            <form id="loginForm" class="login-form">
-                <div class="form-group">
-                    <label for="username">Benutzername</label>
-                    <input type="text" id="username" name="username" required autocomplete="username">
+    <div class="login-background">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <img src="/intelego-logo.png" alt="Intelego Logo" class="login-logo">
+                    <h1>Willkommen zurück</h1>
+                    <p>Melden Sie sich an, um fortzufahren</p>
                 </div>
                 
-                <div class="form-group">
-                    <label for="password">Passwort</label>
-                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label for="username">Benutzername</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <input type="text" id="username" name="username" required autocomplete="username" placeholder="Benutzername eingeben">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Passwort</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Passwort eingeben">
+                        </div>
+                    </div>
+                    
+                    <div id="errorMessage" class="error-message" style="display: none;"></div>
+                    
+                    <button type="submit" class="btn-login">Anmelden</button>
+                </form>
+                
+                <div class="login-footer">
+                    <p>Standard-Login: <strong>admin</strong> / <strong>admin123</strong></p>
                 </div>
-                
-                <div id="errorMessage" class="error-message" style="display: none;"></div>
-                
-                <button type="submit" class="btn btn-primary btn-block">Anmelden</button>
-            </form>
-            
-            <div class="login-footer">
-                <p>Standard-Login: <code>admin</code> / <code>admin123</code></p>
             </div>
         </div>
     </div>
