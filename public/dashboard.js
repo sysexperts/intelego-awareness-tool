@@ -105,7 +105,7 @@ async function loadCustomers() {
             
             // Erstelle Anzeigename mit Kundennummer
             const displayName = customer.customer_number 
-                ? `Kunde ${customer.customer_number} - ${customer.name}`
+                ? `${customer.customer_number} - ${customer.name}`
                 : customer.name;
             
             return `
