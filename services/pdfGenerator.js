@@ -118,7 +118,7 @@ async function generatePDFReport(analysis, customerName, outputPath) {
         
         const reportedCount = overview.attacksReported;
         const totalAttacks = overview.attacksSent;
-        const reportRatio = totalAttacks > 0 ? `${reportedCount} von ${totalAttacks}` : '0';
+        const reportRatio = totalAttacks > 0 ? `${reportedCount}/${totalAttacks}` : '0';
         
         // KPI Box 1
         doc.roundedRect(kpiStartX, yPos, kpiWidth, kpiHeight, 8).lineWidth(2).strokeColor(PRIMARY_COLOR).stroke();
@@ -407,7 +407,8 @@ async function generatePDFReport(analysis, customerName, outputPath) {
         doc.font('Helvetica');
         
         const colWidths = [180, 80, 110, 90, 85];
-        const tableX = MARGIN;
+        const totalTableWidth = colWidths.reduce((a, b) => a + b);
+        const tableX = (PAGE_WIDTH - totalTableWidth) / 2;
         
         doc.rect(tableX, yPos, colWidths.reduce((a, b) => a + b), 25).fillAndStroke(PRIMARY_COLOR, PRIMARY_COLOR);
         doc.fontSize(10).font('Helvetica-Bold').fillColor(WHITE);
