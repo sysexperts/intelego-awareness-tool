@@ -1458,8 +1458,6 @@ textarea:focus {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    max-width: 1400px;
-    margin: 0 auto;
 }
 
 .report-card {
