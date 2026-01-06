@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Intelego Awareness Tool</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h2>🔒 Intelego Awareness Tool</h2>
+        </div>
+        <div class="nav-menu">
+            <span id="usernameDisplay"></span>
+            <button onclick="logout()" class="btn btn-secondary">Abmelden</button>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('customers')">Kunden</button>
+            <button class="tab-btn" onclick="switchTab('upload')">ZIP Upload</button>
+            <button class="tab-btn" onclick="switchTab('reports')">Reports</button>
+        </div>
+        
+        <div id="customersTab" class="tab-content active">
+            <div class="section-header">
+                <h2>Kunden-Verwaltung</h2>
+                <button onclick="showAddCustomerModal()" class="btn btn-primary">+ Neuer Kunde</button>
+            </div>
+            
+            <div id="customersList" class="customers-list"></div>
+        </div>
+        
+        <div id="uploadTab" class="tab-content">
+            <div class="section-header">
+                <h2>ZIP-Datei hochladen</h2>
+            </div>
+            
+            <div class="upload-card">
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label for="customerSelect">Kunde auswählen *</label>
+                        <select id="customerSelect" required>
+                            <option value="">-- Kunde auswählen --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="recipientEmail">E-Mail-Empfänger (optional)</label>
+                        <input type="email" id="recipientEmail" placeholder="kunde@example.com">
+                        <small>Wenn angegeben, wird der Report automatisch per E-Mail versendet</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="zipFile">ZIP-Datei auswählen *</label>
+                        <input type="file" id="zipFile" accept=".zip" required>
+                        <small>Die ZIP-Datei muss genau 3 CSV-Dateien enthalten: Szenarien, Benutzer, Unternehmen</small>
+                    </div>
+                    
+                    <div id="uploadProgress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <p>Verarbeite ZIP-Datei...</p>
+                    </div>
+                    
+                    <div id="uploadResult" style="display: none;"></div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">Hochladen & Analysieren</button>
+                </form>
+            </div>
+        </div>
+        
+        <div id="reportsTab" class="tab-content">
+            <div class="section-header">
+                <h2>Generierte Reports</h2>
+            </div>
+            
+            <div id="reportsList" class="reports-list"></div>
+        </div>
+    </div>
+    
+    <div id="addCustomerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Neuer Kunde</h3>
+                <button onclick="closeAddCustomerModal()" class="close-btn">&times;</button>
+            </div>
+            <form id="addCustomerForm">
+                <div class="form-group">
+                    <label for="customerName">Kundenname *</label>
+                    <input type="text" id="customerName" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeAddCustomerModal()" class="btn btn-secondary">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Erstellen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="dashboard.js"></script>
+</body>
+</html>
