@@ -103,12 +103,17 @@ async function loadCustomers() {
                 `);
             }
             
+            // Erstelle Anzeigename mit Kundennummer
+            const displayName = customer.customer_number 
+                ? `Kunde ${customer.customer_number} - ${customer.name}`
+                : customer.name;
+            
             return `
                 <div class="customer-card">
                     <div class="customer-header">
                         <div class="customer-avatar">${initials}</div>
                         <div class="customer-header-info">
-                            <div class="customer-name">${customer.name}</div>
+                            <div class="customer-name">${displayName}</div>
                             <div class="customer-meta">
                                 <span>Erstellt: ${createdDate}</span>
                                 <span class="customer-badge">
@@ -256,6 +261,7 @@ function editCustomer(id) {
     
     document.getElementById('customerModalTitle').textContent = 'Kunde bearbeiten';
     document.getElementById('customerId').value = customer.id;
+    document.getElementById('customerNumber').value = customer.customer_number || '';
     document.getElementById('customerName').value = customer.name || '';
     document.getElementById('customerEmail').value = customer.email || '';
     document.getElementById('customerPhone').value = customer.phone || '';
@@ -288,6 +294,7 @@ document.getElementById('customerForm').addEventListener('submit', async (e) => 
     const customerId = document.getElementById('customerId').value;
     const customerData = {
         name: document.getElementById('customerName').value,
+        customer_number: document.getElementById('customerNumber').value,
         email: document.getElementById('customerEmail').value,
         phone: document.getElementById('customerPhone').value,
         address: document.getElementById('customerAddress').value,

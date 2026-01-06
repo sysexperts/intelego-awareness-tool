@@ -44,6 +44,9 @@ db.serialize(() => {
     
     const columnNames = columns.map(col => col.name);
     
+    if (!columnNames.includes('customer_number')) {
+      db.run("ALTER TABLE customers ADD COLUMN customer_number TEXT");
+    }
     if (!columnNames.includes('email')) {
       db.run("ALTER TABLE customers ADD COLUMN email TEXT");
     }
