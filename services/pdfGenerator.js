@@ -47,39 +47,59 @@ function generatePDF(analysis, customerName, outputPath) {
       const riskColor = getRiskColor(overview.sicherheitsbewertung);
       
       doc.fontSize(12).fillColor('#34495E');
-      doc.text(`ESI (Enterprise Security Index): ${overview.esi}`);
-      doc.text(`Gesamtanzahl Szenarien: ${overview.totalScenarios}`);
-      doc.text(`Gesamtanzahl Benutzer: ${overview.totalUsers}`);
-      doc.text(`Anfällige Benutzer: ${overview.vulnerableUsers} (${overview.vulnerableUsersPercent}%)`);
-      doc.text(`Gesamtklickrate: ${overview.gesamtKlickrate}%`);
-      doc.text(`Erfolgsquote: ${overview.erfolgsquote}%`);
-      doc.text(`Meldequote: ${overview.meldequote}%`);
-      doc.moveDown(0.5);
-      doc.fontSize(14).fillColor(riskColor).text(`Sicherheitsbewertung: ${overview.sicherheitsbewertung}`, { bold: true });
+      
+      if (overview.hasCompany) {
+        doc.text(`ESI (Enterprise Security Index): ${overview.esi}`);
+      }
+      
+      if (overview.hasScenarios) {
+        doc.text(`Gesamtanzahl Szenarien: ${overview.totalScenarios}`);
+      }
+      
+      if (overview.hasUsers) {
+        doc.text(`Gesamtanzahl Benutzer: ${overview.totalUsers}`);
+        doc.text(`Anfällige Benutzer: ${overview.vulnerableUsers} (${overview.vulnerableUsersPercent}%)`);
+      }
+      
+      if (overview.hasCompany) {
+        doc.text(`Gesamtklickrate: ${overview.gesamtKlickrate}%`);
+        doc.text(`Erfolgsquote: ${overview.erfolgsquote}%`);
+        doc.text(`Meldequote: ${overview.meldequote}%`);
+        doc.moveDown(0.5);
+        doc.fontSize(14).fillColor(riskColor).text(`Sicherheitsbewertung: ${overview.sicherheitsbewertung}`, { bold: true });
+      }
+      
+      if (!overview.hasCompany && !overview.hasUsers && !overview.hasScenarios) {
+        doc.text('Keine auswertbaren Daten in der ZIP-Datei gefunden.');
+      }
+      
       doc.moveDown(1.5);
       
-      doc.fontSize(16).fillColor(primaryColor).text('Detaillierte Statistiken', { underline: true });
-      doc.moveDown(0.5);
-      doc.fontSize(12).fillColor('#34495E');
-      doc.text(`Angriffe gesendet: ${overview.attacksSent}`);
-      doc.text(`Angriffe erfolgreich: ${overview.attacksSuccessful}`);
-      doc.text(`Angriffe gemeldet: ${overview.attacksReported}`);
-      doc.text(`Klicks: ${overview.attacksClicked}`);
-      doc.text(`Login-Versuche: ${overview.attacksLogins}`);
-      doc.text(`Datei-Öffnungen: ${overview.attacksFilesOpened}`);
-      doc.text(`Makro-Ausführungen: ${overview.attacksMacrosExecuted}`);
-      doc.moveDown(1);
-      doc.text(`E-Trainings abgeschlossen: ${overview.trainingsCompleted}`);
-      doc.text(`E-Trainings gestartet: ${overview.trainingsStarted}`);
-      doc.text(`E-Trainings nicht gestartet: ${overview.trainingsNotStarted}`);
-      doc.moveDown(1.5);
+      if (overview.hasCompany) {
+        doc.fontSize(16).fillColor(primaryColor).text('Detaillierte Statistiken', { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(12).fillColor('#34495E');
+        doc.text(`Angriffe gesendet: ${overview.attacksSent}`);
+        doc.text(`Angriffe erfolgreich: ${overview.attacksSuccessful}`);
+        doc.text(`Angriffe gemeldet: ${overview.attacksReported}`);
+        doc.text(`Klicks: ${overview.attacksClicked}`);
+        doc.text(`Login-Versuche: ${overview.attacksLogins}`);
+        doc.text(`Datei-Öffnungen: ${overview.attacksFilesOpened}`);
+        doc.text(`Makro-Ausführungen: ${overview.attacksMacrosExecuted}`);
+        doc.moveDown(1);
+        doc.text(`E-Trainings abgeschlossen: ${overview.trainingsCompleted}`);
+        doc.text(`E-Trainings gestartet: ${overview.trainingsStarted}`);
+        doc.text(`E-Trainings nicht gestartet: ${overview.trainingsNotStarted}`);
+        doc.moveDown(1.5);
+      }
       
-      doc.addPage();
-      
-      doc.fontSize(16).fillColor(primaryColor).text('Top 3 Erfolgreichste Phishing-Szenarien', { underline: true });
-      doc.moveDown(1);
-      
-      analysis.topScenarios.forEach((scenario, index) => {
+      if (overview.hasScenarios && analysis.topScenarios.length > 0) {
+        doc.addPage();
+        
+        doc.fontSize(16).fillColor(primaryColor).text('Top 3 Erfolgreichste Phishing-Szenarien', { underline: true });
+        doc.moveDown(1);
+        
+        analysis.topScenarios.forEach((scenario, index) => {
         doc.fontSize(14).fillColor(accentColor).text(`${index + 1}. ${scenario.description}`);
         doc.fontSize(11).fillColor('#34495E');
         doc.text(`   Szenario-ID: ${scenario.scenarioId}`);
@@ -91,41 +111,56 @@ function generatePDF(analysis, customerName, outputPath) {
         doc.text(`   Klicks: ${scenario.attacksClicked} | Logins: ${scenario.attacksLogins}`);
         doc.text(`   Datei-Öffnungen: ${scenario.attacksFilesOpened} | Makros: ${scenario.attacksMacrosExecuted}`);
         doc.text(`   Psychologische Faktoren: ${scenario.psychologicalFactors}`);
+          doc.moveDown(1);
+        });
+        
         doc.moveDown(1);
-      });
+        
+        if (analysis.topPsychFactors.length > 0) {
+          doc.fontSize(16).fillColor(primaryColor).text('Top 5 Psychologische Faktoren', { underline: true });
+          doc.moveDown(0.5);
+          
+          analysis.topPsychFactors.forEach((item, index) => {
+            doc.fontSize(12).fillColor('#34495E');
+            doc.text(`${index + 1}. ${item.factor} (${item.count} Vorkommen)`);
+          });
+          
+          doc.moveDown(1.5);
+        }
+      }
       
-      doc.moveDown(1);
-      doc.fontSize(16).fillColor(primaryColor).text('Top 5 Psychologische Faktoren', { underline: true });
-      doc.moveDown(0.5);
-      
-      analysis.topPsychFactors.forEach((item, index) => {
-        doc.fontSize(12).fillColor('#34495E');
-        doc.text(`${index + 1}. ${item.factor} (${item.count} Vorkommen)`);
-      });
-      
-      doc.moveDown(1.5);
-      doc.fontSize(16).fillColor(primaryColor).text('Meldeverhalten', { underline: true });
-      doc.moveDown(0.5);
-      doc.fontSize(12).fillColor('#34495E');
-      doc.text(`Gemeldete Phishing-Versuche: ${analysis.reportedVsSuccessful.reported}`);
-      doc.text(`Erfolgreiche Angriffe: ${analysis.reportedVsSuccessful.successful}`);
-      doc.text(`Meldequote: ${analysis.reportedVsSuccessful.ratio}%`);
-      
-      doc.addPage();
-      
-      doc.fontSize(16).fillColor(primaryColor).text('Klickrate nach Sicherheitslevel', { underline: true });
-      doc.moveDown(1);
-      
-      analysis.levelData.forEach(level => {
-        doc.fontSize(12).fillColor(primaryColor).text(`Level ${level.level}:`);
-        doc.fontSize(11).fillColor('#34495E');
-        doc.text(`   Mitarbeiter: ${level.employees}`);
-        doc.text(`   Angriffe gesendet: ${level.attacksSent}`);
-        doc.text(`   Angriffe erfolgreich: ${level.attacksSuccessful}`);
-        doc.text(`   Angriffe gemeldet: ${level.attacksReported}`);
-        doc.text(`   Klickrate: ${level.clickRate}%`);
+      if (overview.hasCompany) {
+        if (overview.hasScenarios) {
+          doc.moveDown(1.5);
+        }
+        
+        doc.fontSize(16).fillColor(primaryColor).text('Meldeverhalten', { underline: true });
         doc.moveDown(0.5);
-      });
+        doc.fontSize(12).fillColor('#34495E');
+        doc.text(`Gemeldete Phishing-Versuche: ${analysis.reportedVsSuccessful.reported}`);
+        doc.text(`Erfolgreiche Angriffe: ${analysis.reportedVsSuccessful.successful}`);
+        doc.text(`Meldequote: ${analysis.reportedVsSuccessful.ratio}%`);
+      }
+      
+      if (overview.hasCompany && analysis.levelData.some(l => l.employees > 0)) {
+        doc.addPage();
+        
+        doc.fontSize(16).fillColor(primaryColor).text('Klickrate nach Sicherheitslevel', { underline: true });
+        doc.moveDown(1);
+        
+        analysis.levelData.forEach(level => {
+          if (level.employees > 0 || level.attacksSent > 0) {
+            doc.fontSize(12).fillColor(primaryColor).text(`Level ${level.level}:`);
+            doc.fontSize(11).fillColor('#34495E');
+            doc.text(`   Mitarbeiter: ${level.employees}`);
+            doc.text(`   Angriffe gesendet: ${level.attacksSent}`);
+            doc.text(`   Angriffe erfolgreich: ${level.attacksSuccessful}`);
+            doc.text(`   Angriffe gemeldet: ${level.attacksReported}`);
+            doc.text(`   Klickrate: ${level.clickRate}%`);
+            doc.moveDown(0.5);
+          }
+        });
+      }
       
       doc.addPage();
       

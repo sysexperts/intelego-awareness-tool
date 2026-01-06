@@ -34,20 +34,12 @@ async function validateAndExtractZip(zipPath) {
       }
     }
     
-    if (csvCount !== 3) {
-      throw new Error(`ZIP-Datei muss genau 3 CSV-Dateien enthalten. Gefunden: ${csvCount}`);
+    if (csvCount < 2 || csvCount > 4) {
+      throw new Error(`ZIP-Datei muss 2-4 CSV-Dateien enthalten. Gefunden: ${csvCount}`);
     }
     
-    if (!csvFiles.scenarios) {
-      throw new Error('Szenario-CSV nicht gefunden. Dateiname muss "scenario" oder "phishing" enthalten.');
-    }
-    
-    if (!csvFiles.users) {
-      throw new Error('Benutzer-CSV nicht gefunden. Dateiname muss "user" oder "employee" enthalten.');
-    }
-    
-    if (!csvFiles.company) {
-      throw new Error('Unternehmens-CSV nicht gefunden. Dateiname muss "company" oder "enterprise" enthalten.');
+    if (!csvFiles.scenarios && !csvFiles.users && !csvFiles.company) {
+      throw new Error('Keine erkennbaren CSV-Dateien gefunden. Dateinamen müssen "scenario/phishing", "user/employee" oder "company/enterprise" enthalten.');
     }
     
     return csvFiles;

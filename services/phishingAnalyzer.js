@@ -11,7 +11,11 @@ function parseFloat2(value) {
 function analyzePhishingData(data) {
   const { scenarios, users, company } = data;
   
-  const companyData = company[0] || {};
+  const hasScenarios = scenarios && scenarios.length > 0;
+  const hasUsers = users && users.length > 0;
+  const hasCompany = company && company.length > 0;
+  
+  const companyData = hasCompany ? (company[0] || {}) : {};
   
   const esi = parseFloat2(companyData.esi);
   const companyAttacksSent = parseNumber(companyData.attacks_sent);
@@ -47,19 +51,21 @@ function analyzePhishingData(data) {
     });
   }
   
-  const totalUsers = users.length;
+  const totalUsers = hasUsers ? users.length : 0;
   let vulnerableUsers = 0;
   
-  users.forEach(user => {
-    const clicked = parseNumber(user.attacks_clicked);
-    const successful = parseNumber(user.attacks_successful);
-    
-    if (clicked > 0 || successful > 0) {
-      vulnerableUsers++;
-    }
-  });
+  if (hasUsers) {
+    users.forEach(user => {
+      const clicked = parseNumber(user.attacks_clicked);
+      const successful = parseNumber(user.attacks_successful);
+      
+      if (clicked > 0 || successful > 0) {
+        vulnerableUsers++;
+      }
+    });
+  }
   
-  const scenarioStats = scenarios.map(scenario => {
+  const scenarioStats = hasScenarios ? scenarios.map(scenario => {
     const scenarioId = scenario.scenario_id || 'N/A';
     const description = scenario.scenario_description || 'Keine Beschreibung';
     const exploitType = scenario.scenario_exploit_type || 'Unbekannt';
@@ -104,9 +110,11 @@ function analyzePhishingData(data) {
       trainingsNotStarted,
       isSuccessful
     };
-  });
+  }) : [];
   
-  scenarioStats.sort((a, b) => b.successRate - a.successRate);
+  if (scenarioStats.length > 0) {
+    scenarioStats.sort((a, b) => b.successRate - a.successRate);
+  }
   
   const gesamtKlickrate = companyAttacksSent > 0 ? 
     (companyAttacksClicked / companyAttacksSent * 100) : 0;
@@ -142,7 +150,10 @@ function analyzePhishingData(data) {
       totalUsers,
       vulnerableUsers,
       vulnerableUsersPercent: totalUsers > 0 ? Math.round((vulnerableUsers / totalUsers) * 100 * 10) / 10 : 0,
-      totalScenarios: scenarios.length,
+      totalScenarios: scenarioStats.length,
+      hasScenarios,
+      hasUsers,
+      hasCompany,
       gesamtKlickrate: Math.round(gesamtKlickrate * 10) / 10,
       erfolgsquote: Math.round(erfolgsquote * 10) / 10,
       meldequote: Math.round(meldequote * 10) / 10,
