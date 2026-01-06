@@ -91,9 +91,9 @@ router.post('/upload', upload.single('zipfile'), async (req, res) => {
         customerId,
         analysis.overview.totalScenarios,
         analysis.overview.totalUsers,
-        analysis.overview.clickRate,
-        analysis.overview.successRate,
-        analysis.overview.riskLevel,
+        analysis.overview.gesamtKlickrate,
+        analysis.overview.erfolgsquote,
+        analysis.overview.sicherheitsbewertung,
         pdfPath,
         emailSent ? 1 : 0
       ], function(err) {
@@ -111,14 +111,14 @@ router.post('/upload', upload.single('zipfile'), async (req, res) => {
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
           reportId,
-          scenario.name,
-          scenario.clicks,
-          scenario.logins,
-          scenario.fileOpens,
-          scenario.macroExecutions,
-          scenario.reported,
+          scenario.description,
+          scenario.attacksClicked,
+          scenario.attacksLogins,
+          scenario.attacksFilesOpened,
+          scenario.attacksMacrosExecuted,
+          scenario.attacksReported,
           scenario.successRate,
-          scenario.psychologicalFactor
+          scenario.psychologicalFactors
         ], (err) => {
           if (err) reject(err);
           else resolve();

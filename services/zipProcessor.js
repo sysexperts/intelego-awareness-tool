@@ -14,23 +14,40 @@ async function validateAndExtractZip(zipPath) {
     const zipEntries = zip.getEntries();
     
     const csvFiles = {};
+    let csvCount = 0;
     
     for (const entry of zipEntries) {
       if (entry.isDirectory) continue;
       
       const fileName = entry.entryName.toLowerCase();
       
-      if (fileName.includes('phishing') && fileName.endsWith('.csv')) {
+      if (!fileName.endsWith('.csv')) continue;
+      
+      csvCount++;
+      
+      if ((fileName.includes('scenario') || fileName.includes('phishing')) && !csvFiles.scenarios) {
         csvFiles.scenarios = entry.getData().toString('utf8');
-      } else if (fileName.includes('user') && fileName.endsWith('.csv')) {
+      } else if ((fileName.includes('user') || fileName.includes('employee')) && !csvFiles.users) {
         csvFiles.users = entry.getData().toString('utf8');
-      } else if (fileName.includes('company') && fileName.endsWith('.csv')) {
+      } else if ((fileName.includes('company') || fileName.includes('enterprise')) && !csvFiles.company) {
         csvFiles.company = entry.getData().toString('utf8');
       }
     }
     
-    if (!csvFiles.scenarios || !csvFiles.users || !csvFiles.company) {
-      throw new Error('ZIP-Datei enthält nicht alle erforderlichen CSV-Dateien (Szenarien, Benutzer, Unternehmen)');
+    if (csvCount !== 3) {
+      throw new Error(`ZIP-Datei muss genau 3 CSV-Dateien enthalten. Gefunden: ${csvCount}`);
+    }
+    
+    if (!csvFiles.scenarios) {
+      throw new Error('Szenario-CSV nicht gefunden. Dateiname muss "scenario" oder "phishing" enthalten.');
+    }
+    
+    if (!csvFiles.users) {
+      throw new Error('Benutzer-CSV nicht gefunden. Dateiname muss "user" oder "employee" enthalten.');
+    }
+    
+    if (!csvFiles.company) {
+      throw new Error('Unternehmens-CSV nicht gefunden. Dateiname muss "company" oder "enterprise" enthalten.');
     }
     
     return csvFiles;
