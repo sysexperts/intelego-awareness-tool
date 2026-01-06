@@ -58,30 +58,97 @@ async function loadCustomers() {
         }
         
         customersList.innerHTML = customers.map(customer => {
+            // Erstelle Avatar-Initialen
+            const initials = customer.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            
+            // Erstelle Datum
+            const createdDate = new Date(customer.created_at).toLocaleDateString('de-DE', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric' 
+            });
+            
+            // Erstelle Details
             const details = [];
-            if (customer.email) details.push(`<div class="customer-detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>${customer.email}</div>`);
-            if (customer.phone) details.push(`<div class="customer-detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>${customer.phone}</div>`);
-            if (customer.city) details.push(`<div class="customer-detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>${customer.city}</div>`);
+            if (customer.email) {
+                details.push(`
+                    <div class="customer-detail">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                        <span class="customer-detail-text">${customer.email}</span>
+                    </div>
+                `);
+            }
+            if (customer.phone) {
+                details.push(`
+                    <div class="customer-detail">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                        <span class="customer-detail-text">${customer.phone}</span>
+                    </div>
+                `);
+            }
+            if (customer.city) {
+                details.push(`
+                    <div class="customer-detail">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span class="customer-detail-text">${customer.city}${customer.country ? ', ' + customer.country : ''}</span>
+                    </div>
+                `);
+            }
             
             return `
                 <div class="customer-card">
-                    <div class="customer-info">
-                        <div class="customer-name">${customer.name}</div>
-                        ${details.length > 0 ? `<div class="customer-details">${details.join('')}</div>` : '<div class="customer-details"><span class="text-muted">Keine Kontaktdaten</span></div>'}
+                    <div class="customer-header">
+                        <div class="customer-avatar">${initials}</div>
+                        <div class="customer-header-info">
+                            <div class="customer-name">${customer.name}</div>
+                            <div class="customer-meta">
+                                <span>Erstellt: ${createdDate}</span>
+                                <span class="customer-badge">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                    </svg>
+                                    Aktiv
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="customer-actions">
-                        <button onclick="editCustomer(${customer.id})" class="btn-icon" title="Bearbeiten">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                        </button>
-                        <button onclick="deleteCustomer(${customer.id})" class="btn-icon btn-danger" title="Löschen">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
+                    
+                    ${details.length > 0 ? `
+                        <div class="customer-info">
+                            <div class="customer-details">${details.join('')}</div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="customer-footer">
+                        <div class="customer-stats">
+                            <div class="customer-stat">
+                                <span class="customer-stat-label">DSGVO</span>
+                                <span class="customer-stat-value">${customer.pdf_show_user_emails ? 'Voll' : 'Eingeschränkt'}</span>
+                            </div>
+                        </div>
+                        <div class="customer-actions">
+                            <button onclick="editCustomer(${customer.id})" class="btn-icon" title="Bearbeiten">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                            <button onclick="deleteCustomer(${customer.id})" class="btn-icon btn-danger" title="Löschen">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
