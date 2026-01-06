@@ -5,7 +5,7 @@ const fs = require('fs');
 const db = require('../database');
 const { processZipFile } = require('../services/zipProcessor');
 const { analyzePhishingData } = require('../services/phishingAnalyzer');
-const { generatePDF } = require('../services/pdfGenerator');
+const { generatePDFReport } = require('../services/pdfGenerator');
 const { sendReportEmail } = require('../services/emailService');
 
 const router = express.Router();
@@ -73,7 +73,7 @@ router.post('/upload', upload.single('zipfile'), async (req, res) => {
     const pdfFilename = `Report_${customer.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
     const pdfPath = path.join(reportsDir, pdfFilename);
     
-    await generatePDF(analysis, customer.name, pdfPath);
+    await generatePDFReport(analysis, customer.name, pdfPath);
     
     let emailSent = false;
     if (recipientEmail && recipientEmail.trim() !== '') {
