@@ -176,60 +176,147 @@ async function loadCustomersForSelect() {
     }
 }
 
+let allReports = [];
+
 async function loadReports() {
     try {
         const response = await fetch('/api/reports');
-        reports = await response.json();
+        allReports = await response.json();
         
-        const reportsList = document.getElementById('reportsList');
+        // Lade Kunden für Filter
+        await loadCustomersForFilter();
         
-        if (reports.length === 0) {
-            reportsList.innerHTML = '<p class="empty-state">Keine Reports vorhanden. Laden Sie eine ZIP-Datei hoch.</p>';
-            return;
-        }
-        
-        reportsList.innerHTML = reports.map(report => {
-            const riskClass = report.risk_level === 'Kritisch' ? 'risk-critical' : 
-                             report.risk_level === 'Hoch' ? 'risk-high' : 
-                             report.risk_level === 'Mittel' ? 'risk-medium' : 'risk-low';
-            
-            return `
-                <div class="report-card">
-                    <div class="report-header">
-                        <h3>${report.customer_name}</h3>
-                        <span class="risk-badge ${riskClass}">${report.risk_level}</span>
-                    </div>
-                    <div class="report-stats">
-                        <div class="stat">
-                            <span class="stat-label">Klickrate</span>
-                            <span class="stat-value">${report.click_rate}%</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-label">Erfolgsquote</span>
-                            <span class="stat-value">${report.success_rate}%</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-label">Szenarien</span>
-                            <span class="stat-value">${report.total_scenarios}</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-label">Benutzer</span>
-                            <span class="stat-value">${report.total_users}</span>
-                        </div>
-                    </div>
-                    <div class="report-footer">
-                        <span class="text-muted">${new Date(report.upload_date).toLocaleString('de-DE')}</span>
-                        <div>
-                            ${report.email_sent ? '<span class="badge-success">✓ E-Mail versendet</span>' : ''}
-                            <a href="/api/reports/download/${report.id}" class="btn btn-primary btn-sm">PDF Download</a>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        // Zeige alle Reports initial
+        displayReports(allReports);
     } catch (error) {
         console.error('Fehler beim Laden der Reports:', error);
     }
+}
+
+async function loadCustomersForFilter() {
+    try {
+        const response = await fetch('/api/customers');
+        const customers = await response.json();
+        
+        const filterSelect = document.getElementById('filterCustomer');
+        filterSelect.innerHTML = '<option value="">Alle Kunden</option>' + 
+            customers.map(c => `<option value="${c.id}">${c.customer_number ? c.customer_number + ' - ' : ''}${c.name}</option>`).join('');
+    } catch (error) {
+        console.error('Fehler beim Laden der Kunden:', error);
+    }
+}
+
+function displayReports(reportsToDisplay) {
+    const reportsList = document.getElementById('reportsList');
+    
+    if (reportsToDisplay.length === 0) {
+        reportsList.innerHTML = '<p class="empty-state">Keine Reports gefunden.</p>';
+        return;
+    }
+    
+    reportsList.innerHTML = reportsToDisplay.map(report => {
+        const riskClass = report.risk_level === 'Kritisch' ? 'risk-critical' : 
+                         report.risk_level === 'Hoch' ? 'risk-high' : 
+                         report.risk_level === 'Mittel' ? 'risk-medium' : 'risk-low';
+        
+        const uploadDate = new Date(report.upload_date);
+        const formattedDate = uploadDate.toLocaleDateString('de-DE', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric'
+        });
+        const formattedTime = uploadDate.toLocaleTimeString('de-DE', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        return `
+            <div class="report-card">
+                <div class="report-header">
+                    <div class="report-customer-info">
+                        <div class="report-customer-name">${report.customer_name}</div>
+                        <div class="report-date">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            ${formattedDate} um ${formattedTime}
+                        </div>
+                    </div>
+                    <span class="risk-badge ${riskClass}">${report.risk_level}</span>
+                </div>
+                <div class="report-stats">
+                    <div class="stat">
+                        <span class="stat-label">Klickrate</span>
+                        <span class="stat-value">${report.click_rate}%</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Erfolgsquote</span>
+                        <span class="stat-value">${report.success_rate}%</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Szenarien</span>
+                        <span class="stat-value">${report.total_scenarios}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Benutzer</span>
+                        <span class="stat-value">${report.total_users}</span>
+                    </div>
+                </div>
+                <div class="report-footer">
+                    <div class="report-actions">
+                        ${report.email_sent ? '<span class="badge-success">✓ E-Mail versendet</span>' : ''}
+                        <a href="/api/reports/download/${report.id}" class="btn btn-primary btn-sm">PDF Download</a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterReports() {
+    const customerFilter = document.getElementById('filterCustomer').value;
+    const dateFromFilter = document.getElementById('filterDateFrom').value;
+    const dateToFilter = document.getElementById('filterDateTo').value;
+    
+    let filtered = allReports;
+    
+    // Filter nach Kunde
+    if (customerFilter) {
+        filtered = filtered.filter(report => report.customer_id == customerFilter);
+    }
+    
+    // Filter nach Datum (Von)
+    if (dateFromFilter) {
+        const fromDate = new Date(dateFromFilter);
+        fromDate.setHours(0, 0, 0, 0);
+        filtered = filtered.filter(report => {
+            const reportDate = new Date(report.upload_date);
+            reportDate.setHours(0, 0, 0, 0);
+            return reportDate >= fromDate;
+        });
+    }
+    
+    // Filter nach Datum (Bis)
+    if (dateToFilter) {
+        const toDate = new Date(dateToFilter);
+        toDate.setHours(23, 59, 59, 999);
+        filtered = filtered.filter(report => {
+            const reportDate = new Date(report.upload_date);
+            return reportDate <= toDate;
+        });
+    }
+    
+    displayReports(filtered);
+}
+
+function resetFilters() {
+    document.getElementById('filterCustomer').value = '';
+    document.getElementById('filterDateFrom').value = '';
+    document.getElementById('filterDateTo').value = '';
+    displayReports(allReports);
 }
 
 // Modal Tab Switching
