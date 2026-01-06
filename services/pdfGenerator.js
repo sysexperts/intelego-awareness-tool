@@ -6,6 +6,7 @@ const PRIMARY_COLOR = '#062E3A';
 const ACCENT_COLOR = '#F39200';
 const GREEN = '#28A745';
 const RED = '#DC3545';
+const YELLOW = '#FFC107';
 const LIGHT_GRAY = '#F8F9FA';
 const DARK_GRAY = '#6C757D';
 const WHITE = '#FFFFFF';
@@ -18,7 +19,7 @@ function getRiskColor(riskLevel) {
 
 function drawKPIBox(doc, x, y, width, height, title, value, color = ACCENT_COLOR) {
   doc.save();
-  doc.roundedRect(x, y, width, height, 5).lineWidth(2).strokeColor(color).stroke();
+  doc.roundedRect(x, y, width, height, 8).lineWidth(2).strokeColor(color).stroke();
   doc.fontSize(9).fillColor(DARK_GRAY).text(title, x + 10, y + 15, { width: width - 20, align: 'center' });
   doc.fontSize(28).font('Helvetica-Bold').fillColor(color).text(value, x + 10, y + 35, { width: width - 20, align: 'center' });
   doc.font('Helvetica');
@@ -48,10 +49,10 @@ function drawTableHeader(doc, headers, x, y, columnWidths) {
   doc.font('Helvetica');
 }
 
-function drawTableRow(doc, values, x, y, columnWidths, isAlternate = false) {
+function drawTableRow(doc, values, x, y, columnWidths, isAlternate = false, bgColor = null) {
   const totalWidth = columnWidths.reduce((a, b) => a + b, 0);
-  const bgColor = isAlternate ? LIGHT_GRAY : WHITE;
-  doc.rect(x, y, totalWidth, 22).fillAndStroke(bgColor, '#DDDDDD');
+  const backgroundColor = bgColor || (isAlternate ? LIGHT_GRAY : WHITE);
+  doc.rect(x, y, totalWidth, 22).fillAndStroke(backgroundColor, '#DDDDDD');
   
   let currentX = x;
   values.forEach((value, i) => {
@@ -66,15 +67,29 @@ function drawTableRow(doc, values, x, y, columnWidths, isAlternate = false) {
 
 function translateExploitType(type) {
   const translations = {
-    'link-login': 'Link mit Login-Aufforderung',
+    'link-login': 'Link mit Login',
     'link-download': 'Link mit Download',
     'attachment-macro': 'Anhang mit Makro',
-    'attachment-exe': 'Anhang mit Programmdatei',
+    'attachment-exe': 'Anhang mit Programm',
     'qr-code': 'QR-Code',
     'phone-call': 'Telefonanruf',
     'sms': 'SMS/Textnachricht'
   };
   return translations[type] || type;
+}
+
+function translatePsychFactor(factor) {
+  const translations = {
+    'fear': 'Angst',
+    'urgency': 'Zeitdruck',
+    'curiosity': 'Neugier',
+    'greed': 'Gier',
+    'authority': 'Autorität',
+    'trust': 'Vertrauen',
+    'helpfulness': 'Hilfsbereitschaft',
+    'scarcity': 'Knappheit'
+  };
+  return translations[factor.toLowerCase()] || factor;
 }
 
 async function generatePDFReport(analysis, customerName, outputPath) {
@@ -91,41 +106,54 @@ async function generatePDFReport(analysis, customerName, outputPath) {
       const overview = analysis.overview;
       const riskColor = getRiskColor(overview.sicherheitsbewertung);
       
-      // 🟦 TITELSEITE
+      // 🟦 TITELSEITE - Moderner und zentriert
       const logoPath = path.join(__dirname, '..', 'public', 'intelego-logo.png');
       if (fs.existsSync(logoPath)) {
-        doc.image(logoPath, 197, 80, { width: 200 });
+        const logoWidth = 220;
+        const logoX = (595.28 - logoWidth) / 2;
+        doc.image(logoPath, logoX, 100, { width: logoWidth });
       }
       
-      doc.moveDown(8);
-      doc.fontSize(32).font('Helvetica-Bold').fillColor(PRIMARY_COLOR).text('Phishing-Analyse Report', { align: 'center' });
-      doc.moveDown(0.5);
-      doc.fontSize(14).font('Helvetica').fillColor(DARK_GRAY).text('Security Awareness Auswertung', { align: 'center' });
+      doc.moveDown(9);
+      
+      // Moderner Titel mit Schatten-Effekt
+      doc.fontSize(36).font('Helvetica-Bold').fillColor(PRIMARY_COLOR).text('Phishing-Analyse Report', { align: 'center' });
+      doc.moveDown(0.8);
+      doc.fontSize(16).font('Helvetica').fillColor(ACCENT_COLOR).text('Security Awareness Auswertung', { align: 'center' });
       doc.moveDown(4);
       
-      doc.fontSize(12).fillColor('#000000').text(`Kunde: ${customerName}`, { align: 'center' });
-      doc.moveDown(0.3);
+      // Kundeninfo in Box
+      const infoBoxY = doc.y;
+      const infoBoxWidth = 400;
+      const infoBoxX = (595.28 - infoBoxWidth) / 2;
+      doc.roundedRect(infoBoxX, infoBoxY, infoBoxWidth, 80, 10).lineWidth(1).strokeColor(DARK_GRAY).stroke();
+      
+      doc.fontSize(13).fillColor('#000000').text(`Kunde: ${customerName}`, infoBoxX, infoBoxY + 20, { width: infoBoxWidth, align: 'center' });
       doc.fontSize(11).fillColor(DARK_GRAY).text(`Erstellt am: ${new Date().toLocaleDateString('de-DE', { 
         year: 'numeric', 
         month: 'long', 
         day: 'numeric' 
-      })}`, { align: 'center' });
-      doc.moveDown(5);
+      })}`, infoBoxX, infoBoxY + 50, { width: infoBoxWidth, align: 'center' });
+      
+      doc.y = infoBoxY + 100;
+      doc.moveDown(2);
       
       doc.fontSize(14).fillColor(DARK_GRAY).text('Sicherheitsbewertung', { align: 'center' });
-      doc.moveDown(0.8);
+      doc.moveDown(1);
       
+      const riskBoxWidth = 280;
+      const riskBoxX = (595.28 - riskBoxWidth) / 2;
       const riskBoxY = doc.y;
-      doc.roundedRect(197, riskBoxY, 200, 80, 10).lineWidth(3).strokeColor(riskColor).stroke();
-      doc.fontSize(42).font('Helvetica-Bold').fillColor(riskColor).text(
+      doc.roundedRect(riskBoxX, riskBoxY, riskBoxWidth, 100, 12).lineWidth(4).strokeColor(riskColor).stroke();
+      doc.fontSize(48).font('Helvetica-Bold').fillColor(riskColor).text(
         overview.sicherheitsbewertung.toUpperCase(), 
-        197, 
-        riskBoxY + 20, 
-        { width: 200, align: 'center' }
+        riskBoxX, 
+        riskBoxY + 25, 
+        { width: riskBoxWidth, align: 'center' }
       );
       doc.font('Helvetica');
       
-      // 1️⃣ ÜBERBLICK
+      // 1️⃣ ÜBERBLICK - Text UNTER den Statistiken
       doc.addPage();
       drawSectionHeader(doc, '1. Zusammenfassung');
       
@@ -135,23 +163,31 @@ async function generatePDFReport(analysis, customerName, outputPath) {
         const kpiHeight = 80;
         const spacing = 12;
         
+        // Meldequote verständlicher: "8 von 10 gemeldet (80%)"
+        const reportedCount = overview.attacksReported;
+        const totalAttacks = overview.attacksSent;
+        const reportRatio = totalAttacks > 0 ? `${reportedCount} von ${totalAttacks}` : '0';
+        const reportPercent = overview.meldequote;
+        
         drawKPIBox(doc, 50, kpiY, kpiWidth, kpiHeight, 'Gesendete Angriffe', overview.attacksSent.toString(), PRIMARY_COLOR);
         drawKPIBox(doc, 50 + kpiWidth + spacing, kpiY, kpiWidth, kpiHeight, 'Erfolgsquote', overview.erfolgsquote + '%', riskColor);
         drawKPIBox(doc, 50 + (kpiWidth + spacing) * 2, kpiY, kpiWidth, kpiHeight, 'Klickrate', overview.gesamtKlickrate + '%', ACCENT_COLOR);
-        drawKPIBox(doc, 50 + (kpiWidth + spacing) * 3, kpiY, kpiWidth, kpiHeight, 'Meldequote', overview.meldequote + '%', GREEN);
+        drawKPIBox(doc, 50 + (kpiWidth + spacing) * 3, kpiY, kpiWidth, kpiHeight, 'Gemeldet', `${reportRatio}\n(${reportPercent}%)`, GREEN);
         
+        // Text UNTER den KPI-Boxen
         doc.y = kpiY + kpiHeight + 25;
         
         doc.fontSize(11).fillColor('#000000').text(
           `Bei ${overview.attacksSent} durchgeführten Phishing-Simulationen wurden ${overview.attacksSuccessful} erfolgreiche Angriffe verzeichnet. ` +
-          `Dies entspricht einer Erfolgsquote von ${overview.erfolgsquote}%. Basierend auf dieser Auswertung wird die Sicherheitslage als `,
+          `Dies entspricht einer Erfolgsquote von ${overview.erfolgsquote}%. ${reportedCount} Angriffe wurden von Mitarbeitern gemeldet. ` +
+          `Basierend auf dieser Auswertung wird die Sicherheitslage als `,
           { align: 'justify', continued: true }
         );
         doc.fillColor(riskColor).font('Helvetica-Bold').text(overview.sicherheitsbewertung.toUpperCase(), { continued: true });
         doc.fillColor('#000000').font('Helvetica').text(' eingestuft.');
       }
       
-      // 2️⃣ SZENARIEN
+      // 2️⃣ SZENARIEN - Ohne Szenario-ID, psychologische Faktoren übersetzt
       if (overview.hasScenarios && analysis.topScenarios.length > 0) {
         doc.addPage();
         drawSectionHeader(doc, '2. Gefährlichste Phishing-Szenarien');
@@ -161,15 +197,14 @@ async function generatePDFReport(analysis, customerName, outputPath) {
         doc.font('Helvetica');
         
         const tableY = doc.y;
-        const columnWidths = [80, 240, 80, 95];
+        const columnWidths = [320, 80, 95];
         
-        drawTableHeader(doc, ['Szenario-ID', 'Beschreibung', 'Angriffe', 'Erfolgsquote'], 50, tableY, columnWidths);
+        drawTableHeader(doc, ['Beschreibung', 'Angriffe', 'Erfolgsquote'], 50, tableY, columnWidths);
         
         let currentY = tableY + 25;
         analysis.topScenarios.forEach((scenario, index) => {
           drawTableRow(doc, [
-            scenario.scenarioId,
-            scenario.description.substring(0, 60) + (scenario.description.length > 60 ? '...' : ''),
+            scenario.description.substring(0, 70) + (scenario.description.length > 70 ? '...' : ''),
             scenario.attacksSent,
             scenario.successRate + '%'
           ], 50, currentY, columnWidths, index % 2 === 1);
@@ -184,13 +219,14 @@ async function generatePDFReport(analysis, customerName, outputPath) {
           doc.font('Helvetica');
           
           analysis.topPsychFactors.forEach((item, index) => {
-            doc.fontSize(10).fillColor('#000000').text(`${index + 1}. ${item.factor} (${item.count} Szenarien)`);
+            const translatedFactor = translatePsychFactor(item.factor);
+            doc.fontSize(10).fillColor('#000000').text(`${index + 1}. ${translatedFactor} (${item.count} Szenarien)`);
             doc.moveDown(0.3);
           });
         }
       }
       
-      // 3️⃣ BENUTZERVERHALTEN
+      // 3️⃣ BENUTZERVERHALTEN - Mit Level-Erklärung
       if (overview.hasUsers) {
         doc.addPage();
         drawSectionHeader(doc, '3. Benutzerverhalten - Übersicht');
@@ -226,17 +262,29 @@ async function generatePDFReport(analysis, customerName, outputPath) {
               currentY += 22;
             }
           });
+          
+          doc.y = currentY + 20;
+          
+          // Level-Erklärung
+          doc.fontSize(11).font('Helvetica-Bold').fillColor(PRIMARY_COLOR).text('Was bedeuten die Sicherheitslevel?');
+          doc.moveDown(0.5);
+          doc.font('Helvetica').fontSize(10).fillColor(DARK_GRAY);
+          doc.text('Level 1: Einstiegslevel - Neue Mitarbeiter ohne Security-Training');
+          doc.text('Level 2: Grundkenntnisse - Basis-Schulung absolviert');
+          doc.text('Level 3: Fortgeschritten - Regelmäßige Trainings und gutes Bewusstsein');
+          doc.text('Level 4: Experte - Hohe Sensibilität und vorbildliches Verhalten');
+          doc.text('Level 5: Security Champion - Multiplikator und Vorbild für andere');
         }
       }
       
-      // 4️⃣ DETAILLIERTE BENUTZERANALYSE
+      // 4️⃣ ANFÄLLIGSTE BENUTZER - Mit Farbmarkierung
       if (overview.hasUsers && analysis.topVulnerableUsers.length > 0) {
         doc.addPage();
         drawSectionHeader(doc, '4. Anfälligste Benutzer - Detailanalyse');
         
         doc.fontSize(11).fillColor(DARK_GRAY).text(
           'Die folgende Tabelle zeigt die Mitarbeiter mit der höchsten Anfälligkeit für Phishing-Angriffe. ' +
-          'Diese Personen sollten prioritär geschult werden.'
+          'Rot markierte Benutzer sind besonders gefährdet und sollten prioritär geschult werden.'
         );
         doc.moveDown(1);
         
@@ -255,6 +303,14 @@ async function generatePDFReport(analysis, customerName, outputPath) {
             currentY += 25;
           }
           
+          // Farbmarkierung: Rot wenn >= 3 erfolgreiche Angriffe, Gelb wenn >= 1
+          let rowColor = null;
+          if (user.successful >= 3) {
+            rowColor = '#FFCCCC'; // Hellrot
+          } else if (user.successful >= 1) {
+            rowColor = '#FFF9C4'; // Hellgelb
+          }
+          
           drawTableRow(doc, [
             user.email,
             user.level,
@@ -263,7 +319,7 @@ async function generatePDFReport(analysis, customerName, outputPath) {
             user.clicked,
             user.trainingsCompleted,
             user.vulnerability + '%'
-          ], 50, currentY, columnWidths, index % 2 === 1);
+          ], 50, currentY, columnWidths, index % 2 === 1, rowColor);
           currentY += 22;
         });
         
@@ -309,7 +365,7 @@ async function generatePDFReport(analysis, customerName, outputPath) {
         }
       }
       
-      // 5️⃣ DETAILLIERTE SZENARIO-ANALYSE
+      // 5️⃣ ANGRIFFSTYPEN - Zentriert, übersetzt, zusammengefasst
       if (overview.hasScenarios && analysis.exploitTypeAnalysis.length > 0) {
         doc.addPage();
         drawSectionHeader(doc, '5. Angriffstypen - Detailanalyse');
@@ -320,8 +376,9 @@ async function generatePDFReport(analysis, customerName, outputPath) {
         
         const tableY = doc.y;
         const columnWidths = [180, 80, 110, 90, 85];
+        const tableX = 50;
         
-        drawTableHeader(doc, ['Angriffstyp', 'Szenarien', 'Ø Erfolgsrate', 'Angriffe', 'Erfolgreich'], 50, tableY, columnWidths);
+        drawTableHeader(doc, ['Angriffstyp', 'Szenarien', 'Ø Erfolgsrate', 'Angriffe', 'Erfolgreich'], tableX, tableY, columnWidths);
         
         let currentY = tableY + 25;
         analysis.exploitTypeAnalysis.forEach((type, index) => {
@@ -331,46 +388,25 @@ async function generatePDFReport(analysis, customerName, outputPath) {
             type.avgSuccessRate + '%',
             type.totalAttacks,
             type.successfulAttacks
-          ], 50, currentY, columnWidths, index % 2 === 1);
+          ], tableX, currentY, columnWidths, index % 2 === 1);
           currentY += 22;
         });
         
         doc.y = currentY + 25;
         
-        doc.fontSize(12).font('Helvetica-Bold').fillColor(PRIMARY_COLOR).text('Alle Szenarien im Detail');
+        // Zusammenfassung statt alle Details
+        doc.fontSize(12).font('Helvetica-Bold').fillColor(PRIMARY_COLOR).text('Szenario-Zusammenfassung');
         doc.moveDown(0.5);
         doc.font('Helvetica');
         
-        const tableY2 = doc.y;
-        const columnWidths2 = [60, 120, 40, 60, 45, 45, 45, 45];
-        
-        drawTableHeader(doc, ['ID', 'Typ', 'Lvl', 'Erfolg%', 'Klicks', 'Logins', 'Dateien', 'Makros'], 50, tableY2, columnWidths2);
-        
-        let currentY2 = tableY2 + 25;
-        analysis.scenarioStats.forEach((scenario, index) => {
-          if (currentY2 > 750) {
-            doc.addPage();
-            drawSectionHeader(doc, '5. Alle Szenarien - Fortsetzung');
-            currentY2 = doc.y;
-            drawTableHeader(doc, ['ID', 'Typ', 'Lvl', 'Erfolg%', 'Klicks', 'Logins', 'Dateien', 'Makros'], 50, currentY2, columnWidths2);
-            currentY2 += 25;
-          }
-          
-          drawTableRow(doc, [
-            scenario.scenarioId.toString().substring(0, 10),
-            translateExploitType(scenario.exploitType).substring(0, 20),
-            scenario.level,
-            scenario.successRate + '%',
-            scenario.attacksClicked,
-            scenario.attacksLogins,
-            scenario.attacksFilesOpened,
-            scenario.attacksMacrosExecuted
-          ], 50, currentY2, columnWidths2, index % 2 === 1);
-          currentY2 += 22;
-        });
+        doc.fontSize(10).fillColor(DARK_GRAY).text(
+          `Insgesamt wurden ${analysis.scenarioStats.length} verschiedene Phishing-Szenarien getestet. ` +
+          `Die durchschnittliche Erfolgsquote über alle Szenarien beträgt ${overview.erfolgsquote}%. ` +
+          `Die gefährlichsten Angriffstypen sind oben aufgeführt.`
+        );
       }
       
-      // 6️⃣ TRAINING-EFFEKTIVITÄT
+      // 6️⃣ TRAINING-EFFEKTIVITÄT - 0%-Bug behoben, Tabelle ausgerichtet
       if (overview.hasUsers && analysis.trainingEffectiveness) {
         doc.addPage();
         drawSectionHeader(doc, '6. Training-Effektivität');
@@ -424,8 +460,9 @@ async function generatePDFReport(analysis, customerName, outputPath) {
           
           const tableY = doc.y;
           const columnWidths = [100, 130, 180, 135];
+          const tableX = 50;
           
-          drawTableHeader(doc, ['Level', 'Anzahl Mitarbeiter', 'Ø erfolgreiche Angriffe', 'Ø Trainings'], 50, tableY, columnWidths);
+          drawTableHeader(doc, ['Level', 'Anzahl Mitarbeiter', 'Ø erfolgreiche Angriffe', 'Ø Trainings'], tableX, tableY, columnWidths);
           
           let currentY = tableY + 25;
           analysis.levelStats.forEach((stat, index) => {
@@ -434,26 +471,28 @@ async function generatePDFReport(analysis, customerName, outputPath) {
               stat.userCount,
               stat.avgSuccessful,
               stat.avgTrainings
-            ], 50, currentY, columnWidths, index % 2 === 1);
+            ], tableX, currentY, columnWidths, index % 2 === 1);
             currentY += 22;
           });
         }
       }
       
-      // 7️⃣ FAZIT & EMPFEHLUNGEN
+      // 7️⃣ FAZIT - Footer zentriert
       doc.addPage();
       drawSectionHeader(doc, '7. Fazit und Handlungsempfehlungen');
       
       doc.fontSize(14).fillColor(DARK_GRAY).text('Gesamtbewertung der Sicherheitslage', { align: 'center' });
       doc.moveDown(1);
       
+      const riskBoxWidth2 = 280;
+      const riskBoxX2 = (595.28 - riskBoxWidth2) / 2;
       const riskBoxY2 = doc.y;
-      doc.roundedRect(147, riskBoxY2, 300, 100, 10).lineWidth(4).strokeColor(riskColor).stroke();
+      doc.roundedRect(riskBoxX2, riskBoxY2, riskBoxWidth2, 100, 12).lineWidth(4).strokeColor(riskColor).stroke();
       doc.fontSize(48).font('Helvetica-Bold').fillColor(riskColor).text(
         overview.sicherheitsbewertung.toUpperCase(), 
-        147, 
+        riskBoxX2, 
         riskBoxY2 + 25, 
-        { width: 300, align: 'center' }
+        { width: riskBoxWidth2, align: 'center' }
       );
       doc.font('Helvetica');
       
@@ -505,6 +544,8 @@ async function generatePDFReport(analysis, customerName, outputPath) {
       }
       
       doc.moveDown(3);
+      
+      // Footer zentriert
       doc.fontSize(9).fillColor(DARK_GRAY).text(
         'Dieser Report wurde automatisch generiert und enthält ausschließlich aggregierte, anonymisierte Daten.',
         { align: 'center' }
