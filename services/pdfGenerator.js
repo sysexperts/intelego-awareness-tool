@@ -112,13 +112,13 @@ async function generatePDFReport(analysis, customerName, outputPath) {
         const kpiWidth = 115;
         const kpiHeight = 80;
         const kpiSpacing = 12;
-        const totalKpiWidth = (kpiWidth * 4) + (kpiSpacing * 3);
+        const kpi4Width = 130;
+        const totalKpiWidth = (kpiWidth * 3) + kpi4Width + (kpiSpacing * 3);
         const kpiStartX = (PAGE_WIDTH - totalKpiWidth) / 2;
         
         const reportedCount = overview.attacksReported;
         const totalAttacks = overview.attacksSent;
         const reportRatio = totalAttacks > 0 ? `${reportedCount} von ${totalAttacks}` : '0';
-        const reportPercent = overview.meldequote;
         
         // KPI Box 1
         doc.roundedRect(kpiStartX, yPos, kpiWidth, kpiHeight, 8).lineWidth(2).strokeColor(PRIMARY_COLOR).stroke();
@@ -137,11 +137,11 @@ async function generatePDFReport(analysis, customerName, outputPath) {
         doc.fontSize(9).font('Helvetica').fillColor(DARK_GRAY).text('Klickrate', kpi3X + 10, yPos + 15, { width: kpiWidth - 20, align: 'center' });
         doc.fontSize(28).font('Helvetica-Bold').fillColor(ACCENT_COLOR).text(overview.gesamtKlickrate + '%', kpi3X + 10, yPos + 40, { width: kpiWidth - 20, align: 'center' });
         
-        // KPI Box 4
+        // KPI Box 4 - Größer für längeren Text
         const kpi4X = kpi3X + kpiWidth + kpiSpacing;
-        doc.roundedRect(kpi4X, yPos, kpiWidth, kpiHeight, 8).lineWidth(2).strokeColor(GREEN).stroke();
-        doc.fontSize(9).font('Helvetica').fillColor(DARK_GRAY).text('Gemeldet', kpi4X + 10, yPos + 15, { width: kpiWidth - 20, align: 'center' });
-        doc.fontSize(18).font('Helvetica-Bold').fillColor(GREEN).text(`${reportRatio}\n(${reportPercent}%)`, kpi4X + 10, yPos + 35, { width: kpiWidth - 20, align: 'center' });
+        doc.roundedRect(kpi4X, yPos, kpi4Width, kpiHeight, 8).lineWidth(2).strokeColor(GREEN).stroke();
+        doc.fontSize(9).font('Helvetica').fillColor(DARK_GRAY).text('Gemeldet', kpi4X + 10, yPos + 15, { width: kpi4Width - 20, align: 'center' });
+        doc.fontSize(20).font('Helvetica-Bold').fillColor(GREEN).text(reportRatio, kpi4X + 10, yPos + 40, { width: kpi4Width - 20, align: 'center' });
         
         yPos += kpiHeight + 30;
         doc.font('Helvetica');
@@ -199,7 +199,14 @@ async function generatePDFReport(analysis, customerName, outputPath) {
           doc.font('Helvetica');
           
           analysis.topPsychFactors.forEach((item) => {
-            const translatedFactor = translatePsychFactor(item.factor);
+            let factorText = item.factor;
+            if (Array.isArray(factorText)) {
+              factorText = factorText[0];
+            }
+            if (typeof factorText === 'string') {
+              factorText = factorText.replace(/[\[\]'"]/g, '');
+            }
+            const translatedFactor = translatePsychFactor(factorText);
             doc.fontSize(10).fillColor('#000000').text(`• ${translatedFactor} (${item.count} Szenarien)`, MARGIN, yPos);
             yPos += 20;
           });
@@ -436,6 +443,27 @@ async function generatePDFReport(analysis, customerName, outputPath) {
           `Die gefährlichsten Angriffstypen sind oben aufgeführt.`,
           MARGIN, yPos, { width: CONTENT_WIDTH }
         );
+        
+        yPos += 50;
+        
+        doc.fontSize(11).font('Helvetica-Bold').fillColor(PRIMARY_COLOR).text('Erklärung der Angriffstypen:', MARGIN, yPos);
+        yPos += 20;
+        doc.font('Helvetica').fontSize(9).fillColor(DARK_GRAY);
+        
+        const typeExplanations = [
+          'Link mit Login: E-Mail mit Link zu gefälschter Login-Seite',
+          'Link mit Download: E-Mail mit Link zum Download schädlicher Dateien',
+          'Anhang mit Makro: Office-Dokument mit aktivierbaren Makros',
+          'Anhang mit Programm: Ausführbare Datei als E-Mail-Anhang',
+          'QR-Code: QR-Code der zu schädlicher Website führt',
+          'Telefonanruf: Vishing-Angriff per Telefon',
+          'SMS/Textnachricht: Smishing-Angriff per SMS'
+        ];
+        
+        typeExplanations.forEach(explanation => {
+          doc.text(`• ${explanation}`, MARGIN + 10, yPos);
+          yPos += 16;
+        });
       }
       
       // ==================== 6. TRAINING-EFFEKTIVITÄT ====================
