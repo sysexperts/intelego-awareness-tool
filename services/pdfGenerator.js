@@ -53,6 +53,12 @@ async function generatePDFReport(analysis, customerName, outputPath) {
       const riskColor = getRiskColor(overview.sicherheitsbewertung);
       
       // 🟦 TITELSEITE
+      const logoPath = path.join(__dirname, '..', 'public', 'intelego-logo.png');
+      if (fs.existsSync(logoPath)) {
+        doc.image(logoPath, 200, 50, { width: 200 });
+        doc.moveDown(4);
+      }
+      
       doc.fontSize(28).fillColor(PRIMARY_COLOR).text('Hornetsecurity Phishing Analyse', { align: 'center' });
       doc.moveDown(0.5);
       doc.fontSize(18).fillColor(DARK_GRAY).text('Phishing-Analyse Report', { align: 'center' });

@@ -8,12 +8,17 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="nav-brand">
-            <h2>🔒 Intelego Awareness Tool</h2>
-        </div>
-        <div class="nav-menu">
-            <span id="usernameDisplay"></span>
-            <button onclick="logout()" class="btn btn-secondary">Abmelden</button>
+        <div class="container">
+            <header>
+                <div class="header-logo">
+                    <img src="/intelego-logo.png" alt="Intelego Logo" class="dashboard-logo">
+                    <h1>Intelego Awareness Tool</h1>
+                </div>
+                <div class="header-actions">
+                    <span id="usernameDisplay"></span>
+                    <button id="logoutBtn" class="btn btn-secondary" onclick="logout()">Abmelden</button>
+                </div>
+            </header>
         </div>
     </nav>
     

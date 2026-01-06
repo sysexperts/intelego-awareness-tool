@@ -49,6 +49,12 @@ body {
     margin-bottom: 30px;
 }
 
+.login-header .logo {
+    width: 200px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
 .login-header h1 {
     color: var(--primary-color);
     font-size: 1.8rem;
@@ -101,6 +107,37 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
+}
+
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 30px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.dashboard-logo {
+    width: 150px;
+    height: auto;
+    background: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 28px;
 }
 
 .container {
