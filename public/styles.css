@@ -843,13 +843,11 @@ body:not(.login-page) {
 .btn-danger {
     background: var(--danger-color);
     color: var(--white);
-    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.25);
 }
 
 .btn-danger:hover {
     background: #c82333;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.35);
 }
 
 .btn-success {
