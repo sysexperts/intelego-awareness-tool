@@ -547,42 +547,31 @@ body:not(.login-page) {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 14px 16px;
-    border-radius: 12px;
+    padding: 14px 18px;
+    border-radius: 14px;
     color: var(--text-muted);
     text-decoration: none;
     font-weight: 600;
     font-size: 0.95rem;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
 }
 
-.nav-item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(180deg, var(--accent-color), #e08800);
-    transform: scaleY(0);
-    transition: transform 0.3s ease;
-}
-
 .nav-item:hover {
-    background: rgba(243, 146, 0, 0.08);
+    background: var(--light-bg);
     color: var(--primary-color);
-    transform: translateX(4px);
+    transform: translateX(2px);
 }
 
 .nav-item.active {
-    background: linear-gradient(135deg, rgba(243, 146, 0, 0.15), rgba(243, 146, 0, 0.08));
-    color: var(--accent-color);
+    background: linear-gradient(135deg, #e08800 0%, #c77700 100%);
+    color: var(--white);
+    box-shadow: 0 4px 12px rgba(224, 136, 0, 0.3);
 }
 
-.nav-item.active::before {
-    transform: scaleY(1);
+.nav-item.active svg {
+    color: var(--white);
 }
 
 .nav-item svg {

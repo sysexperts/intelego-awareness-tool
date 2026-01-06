@@ -26,10 +26,12 @@ async function logout() {
 }
 
 function switchTab(tabName) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    // Remove active class from all nav items
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
-    event.target.classList.add('active');
+    // Add active class to clicked nav item
+    event.target.closest('.nav-item').classList.add('active');
     document.getElementById(tabName + 'Tab').classList.add('active');
     
     currentTab = tabName;
