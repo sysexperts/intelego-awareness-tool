@@ -1186,7 +1186,7 @@ textarea:focus {
     background: var(--white);
     border-radius: 16px;
     padding: 28px;
-    border: 2px solid transparent;
+    border: 2px solid var(--primary-color);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
@@ -1289,14 +1289,16 @@ textarea:focus {
     font-size: 0.9rem;
     color: var(--text-muted);
     padding: 8px 12px;
-    background: var(--light-bg);
+    background: var(--white);
     border-radius: 8px;
     transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
 }
 
 .customer-detail:hover {
-    background: rgba(243, 146, 0, 0.08);
+    background: var(--white);
     color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 .customer-detail svg {
