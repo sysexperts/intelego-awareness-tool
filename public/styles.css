@@ -737,7 +737,7 @@ body:not(.login-page) {
 .upload-card,
 .customers-list,
 .reports-list {
-    background: #c7c7c7;
+    background: #ffffff;
     backdrop-filter: blur(10px);
     border-radius: 20px;
     padding: 40px;
