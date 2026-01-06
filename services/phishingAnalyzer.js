@@ -54,16 +54,98 @@ function analyzePhishingData(data) {
   const totalUsers = hasUsers ? users.length : 0;
   let vulnerableUsers = 0;
   
+  const userDetails = [];
+  const usersByLevel = {};
+  let usersWithTraining = 0;
+  let usersWithoutTraining = 0;
+  let successfulAttacksWithTraining = 0;
+  let successfulAttacksWithoutTraining = 0;
+  let totalAttacksWithTraining = 0;
+  let totalAttacksWithoutTraining = 0;
+  
   if (hasUsers) {
     users.forEach(user => {
       const clicked = parseNumber(user.attacks_clicked);
       const successful = parseNumber(user.attacks_successful);
+      const sent = parseNumber(user.attacks_sent);
+      const reported = parseNumber(user.attacks_reported);
+      const logins = parseNumber(user.attacks_logins);
+      const filesOpened = parseNumber(user.attacks_files_opened);
+      const macrosExecuted = parseNumber(user.attacks_macros_executed);
+      const trainingsCompleted = parseNumber(user.e_trainings_completed);
+      const trainingsStarted = parseNumber(user.e_trainings_started);
+      const trainingsNotStarted = parseNumber(user.e_trainings_not_started);
+      const level = user.employee_level || 'N/A';
+      const email = user.employee_email || 'Anonym';
+      const id = user.employee_id || 'N/A';
+      
+      const vulnerability = sent > 0 ? (successful / sent * 100) : 0;
       
       if (clicked > 0 || successful > 0) {
         vulnerableUsers++;
       }
+      
+      userDetails.push({
+        id,
+        email,
+        level,
+        sent,
+        successful,
+        clicked,
+        logins,
+        filesOpened,
+        macrosExecuted,
+        reported,
+        trainingsCompleted,
+        trainingsStarted,
+        trainingsNotStarted,
+        vulnerability: Math.round(vulnerability * 10) / 10
+      });
+      
+      if (!usersByLevel[level]) {
+        usersByLevel[level] = {
+          count: 0,
+          totalSuccessful: 0,
+          totalTrainings: 0
+        };
+      }
+      usersByLevel[level].count++;
+      usersByLevel[level].totalSuccessful += successful;
+      usersByLevel[level].totalTrainings += trainingsCompleted;
+      
+      if (trainingsCompleted > 0) {
+        usersWithTraining++;
+        successfulAttacksWithTraining += successful;
+        totalAttacksWithTraining += sent;
+      } else {
+        usersWithoutTraining++;
+        successfulAttacksWithoutTraining += successful;
+        totalAttacksWithoutTraining += sent;
+      }
     });
   }
+  
+  userDetails.sort((a, b) => b.vulnerability - a.vulnerability);
+  
+  const levelStats = Object.entries(usersByLevel).map(([level, data]) => ({
+    level,
+    userCount: data.count,
+    avgSuccessful: data.count > 0 ? Math.round((data.totalSuccessful / data.count) * 10) / 10 : 0,
+    avgTrainings: data.count > 0 ? Math.round((data.totalTrainings / data.count) * 10) / 10 : 0
+  }));
+  
+  const trainingEffectiveness = {
+    withTraining: {
+      users: usersWithTraining,
+      successRate: totalAttacksWithTraining > 0 ? 
+        Math.round((successfulAttacksWithTraining / totalAttacksWithTraining * 100) * 10) / 10 : 0
+    },
+    withoutTraining: {
+      users: usersWithoutTraining,
+      successRate: totalAttacksWithoutTraining > 0 ? 
+        Math.round((successfulAttacksWithoutTraining / totalAttacksWithoutTraining * 100) * 10) / 10 : 0
+    }
+  };
   
   const scenarioStats = hasScenarios ? scenarios.map(scenario => {
     const scenarioId = scenario.scenario_id || 'N/A';
@@ -144,6 +226,34 @@ function analyzePhishingData(data) {
     .slice(0, 5)
     .map(([factor, count]) => ({ factor, count }));
   
+  const exploitTypeStats = {};
+  scenarioStats.forEach(s => {
+    const type = s.exploitType;
+    if (!exploitTypeStats[type]) {
+      exploitTypeStats[type] = {
+        count: 0,
+        totalSuccessRate: 0,
+        totalAttacks: 0,
+        successfulAttacks: 0
+      };
+    }
+    exploitTypeStats[type].count++;
+    exploitTypeStats[type].totalSuccessRate += s.successRate;
+    exploitTypeStats[type].totalAttacks += s.attacksSent;
+    exploitTypeStats[type].successfulAttacks += s.attacksSuccessful;
+  });
+  
+  const exploitTypeAnalysis = Object.entries(exploitTypeStats).map(([type, data]) => ({
+    type,
+    scenarioCount: data.count,
+    avgSuccessRate: data.count > 0 ? Math.round((data.totalSuccessRate / data.count) * 10) / 10 : 0,
+    totalAttacks: data.totalAttacks,
+    successfulAttacks: data.successfulAttacks
+  })).sort((a, b) => b.avgSuccessRate - a.avgSuccessRate);
+  
+  const avgTrainingsPerUser = totalUsers > 0 ? 
+    Math.round((companyTrainingsCompleted / totalUsers) * 10) / 10 : 0;
+  
   return {
     overview: {
       esi,
@@ -168,12 +278,18 @@ function analyzePhishingData(data) {
       trainingsCompleted: companyTrainingsCompleted,
       trainingsStarted: companyTrainingsStarted,
       trainingsNotStarted: companyTrainingsNotStarted,
-      mostEffectivePsychFactors: companyMostEffectivePsychFactors
+      mostEffectivePsychFactors: companyMostEffectivePsychFactors,
+      avgTrainingsPerUser
     },
     scenarioStats,
     topScenarios: scenarioStats.slice(0, 3),
     levelData,
     topPsychFactors,
+    exploitTypeAnalysis,
+    userDetails,
+    topVulnerableUsers: userDetails.slice(0, 10),
+    levelStats,
+    trainingEffectiveness,
     reportedVsSuccessful: {
       reported: companyAttacksReported,
       successful: companyAttacksSuccessful,
