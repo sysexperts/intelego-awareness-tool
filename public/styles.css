@@ -1254,6 +1254,7 @@ textarea:focus {
 
 .btn-icon.btn-danger:hover {
     background: var(--danger-color);
+    box-shadow: none;
 }
 
 /* Reports List */
