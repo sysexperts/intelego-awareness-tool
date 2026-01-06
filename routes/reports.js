@@ -73,7 +73,7 @@ router.post('/upload', upload.single('zipfile'), async (req, res) => {
     const pdfFilename = `Report_${customer.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
     const pdfPath = path.join(reportsDir, pdfFilename);
     
-    await generatePDFReport(analysis, customer.name, pdfPath);
+    await generatePDFReport(analysis, customer, pdfPath);
     
     let emailSent = false;
     if (recipientEmail && recipientEmail.trim() !== '') {

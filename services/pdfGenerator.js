@@ -49,7 +49,7 @@ function translatePsychFactor(factor) {
   return translations[factor.toLowerCase()] || factor;
 }
 
-async function generatePDFReport(analysis, customerName, outputPath) {
+async function generatePDFReport(analysis, customer, outputPath) {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ 
@@ -62,6 +62,12 @@ async function generatePDFReport(analysis, customerName, outputPath) {
       
       const overview = analysis.overview;
       const riskColor = getRiskColor(overview.sicherheitsbewertung);
+      
+      // DSGVO-Einstellungen aus Kundendaten
+      const customerName = customer.name;
+      const showUserEmails = customer.pdf_show_user_emails !== 0;
+      const showUserNames = customer.pdf_show_user_names !== 0;
+      const showDetailedStats = customer.pdf_show_detailed_stats !== 0;
       
       // ==================== TITELSEITE ====================
       let yPos = 100;
@@ -294,7 +300,7 @@ async function generatePDFReport(analysis, customerName, outputPath) {
       }
       
       // ==================== 4. ANFÄLLIGSTE BENUTZER ====================
-      if (overview.hasUsers && analysis.topVulnerableUsers.length > 0) {
+      if (overview.hasUsers && analysis.topVulnerableUsers.length > 0 && showDetailedStats) {
         doc.addPage();
         yPos = MARGIN;
         
@@ -304,61 +310,69 @@ async function generatePDFReport(analysis, customerName, outputPath) {
         yPos += 30;
         doc.font('Helvetica');
         
-        doc.fontSize(11).fillColor(DARK_GRAY).text('Die folgende Tabelle zeigt die Mitarbeiter mit der höchsten Anfälligkeit für Phishing-Angriffe. Rot markierte Benutzer sind besonders gefährdet und sollten prioritär geschult werden.', MARGIN, yPos, { width: CONTENT_WIDTH });
-        yPos += 40;
-        
-        const colWidths = [140, 50, 60, 60, 50, 60, 75];
-        const tableX = MARGIN;
-        
-        doc.rect(tableX, yPos, colWidths.reduce((a, b) => a + b), 25).fillAndStroke(PRIMARY_COLOR, PRIMARY_COLOR);
-        doc.fontSize(10).font('Helvetica-Bold').fillColor(WHITE);
-        let xPos = tableX + 8;
-        ['E-Mail', 'Level', 'Gesendet', 'Erfolge', 'Klicks', 'Trainings', 'Anfälligkeit'].forEach((header, i) => {
-          doc.text(header, xPos, yPos + 8, { width: colWidths[i] - 16 });
-          xPos += colWidths[i];
-        });
-        yPos += 25;
-        doc.font('Helvetica');
-        
-        analysis.topVulnerableUsers.slice(0, 15).forEach((user, index) => {
-          if (yPos > 750) {
-            doc.addPage();
-            yPos = MARGIN;
-            doc.fontSize(16).font('Helvetica-Bold').fillColor(PRIMARY_COLOR).text('4. Anfälligste Benutzer - Fortsetzung', MARGIN, yPos);
-            yPos += 25;
-            doc.moveTo(MARGIN, yPos).lineTo(PAGE_WIDTH - MARGIN, yPos).lineWidth(2).strokeColor(ACCENT_COLOR).stroke();
-            yPos += 30;
-            doc.font('Helvetica');
-            
-            doc.rect(tableX, yPos, colWidths.reduce((a, b) => a + b), 25).fillAndStroke(PRIMARY_COLOR, PRIMARY_COLOR);
-            doc.fontSize(10).font('Helvetica-Bold').fillColor(WHITE);
-            xPos = tableX + 8;
-            ['E-Mail', 'Level', 'Gesendet', 'Erfolge', 'Klicks', 'Trainings', 'Anfälligkeit'].forEach((header, i) => {
-              doc.text(header, xPos, yPos + 8, { width: colWidths[i] - 16 });
-              xPos += colWidths[i];
-            });
-            yPos += 25;
-            doc.font('Helvetica');
-          }
+        if (!showUserEmails && !showUserNames) {
+          doc.fontSize(11).fillColor(DARK_GRAY).text('Detaillierte Benutzerstatistiken sind gemäß DSGVO-Einstellungen nicht verfügbar. Es werden nur aggregierte, anonymisierte Daten angezeigt.', MARGIN, yPos, { width: CONTENT_WIDTH });
+        } else {
+          doc.fontSize(11).fillColor(DARK_GRAY).text('Die folgende Tabelle zeigt die Mitarbeiter mit der höchsten Anfälligkeit für Phishing-Angriffe. Rot markierte Benutzer sind besonders gefährdet und sollten prioritär geschult werden.', MARGIN, yPos, { width: CONTENT_WIDTH });
+          yPos += 40;
           
-          let rowColor = WHITE;
-          if (user.successful >= 3) {
-            rowColor = '#FFCCCC';
-          } else if (user.successful >= 1) {
-            rowColor = '#FFF9C4';
-          } else if (index % 2 === 1) {
-            rowColor = LIGHT_GRAY;
-          }
+          const colWidths = [140, 50, 60, 60, 50, 60, 75];
+          const tableX = MARGIN;
           
-          doc.rect(tableX, yPos, colWidths.reduce((a, b) => a + b), 22).fillAndStroke(rowColor, '#DDDDDD');
-          doc.fontSize(9).fillColor('#000000');
-          xPos = tableX + 8;
-          [user.email, user.level, user.sent, user.successful, user.clicked, user.trainingsCompleted, user.vulnerability + '%'].forEach((val, i) => {
-            doc.text(String(val), xPos, yPos + 6, { width: colWidths[i] - 16, ellipsis: true });
+          doc.rect(tableX, yPos, colWidths.reduce((a, b) => a + b), 25).fillAndStroke(PRIMARY_COLOR, PRIMARY_COLOR);
+          doc.fontSize(10).font('Helvetica-Bold').fillColor(WHITE);
+          let xPos = tableX + 8;
+          const headers = [showUserEmails ? 'E-Mail' : 'Benutzer-ID', 'Level', 'Gesendet', 'Erfolge', 'Klicks', 'Trainings', 'Anfälligkeit'];
+          headers.forEach((header, i) => {
+            doc.text(header, xPos, yPos + 8, { width: colWidths[i] - 16 });
             xPos += colWidths[i];
           });
-          yPos += 22;
-        });
+          yPos += 25;
+          doc.font('Helvetica');
+          
+          analysis.topVulnerableUsers.slice(0, 15).forEach((user, index) => {
+            if (yPos > 750) {
+              doc.addPage();
+              yPos = MARGIN;
+              doc.fontSize(16).font('Helvetica-Bold').fillColor(PRIMARY_COLOR).text('4. Anfälligste Benutzer - Fortsetzung', MARGIN, yPos);
+              yPos += 25;
+              doc.moveTo(MARGIN, yPos).lineTo(PAGE_WIDTH - MARGIN, yPos).lineWidth(2).strokeColor(ACCENT_COLOR).stroke();
+              yPos += 30;
+              doc.font('Helvetica');
+              
+              doc.rect(tableX, yPos, colWidths.reduce((a, b) => a + b), 25).fillAndStroke(PRIMARY_COLOR, PRIMARY_COLOR);
+              doc.fontSize(10).font('Helvetica-Bold').fillColor(WHITE);
+              xPos = tableX + 8;
+              headers.forEach((header, i) => {
+                doc.text(header, xPos, yPos + 8, { width: colWidths[i] - 16 });
+                xPos += colWidths[i];
+              });
+              yPos += 25;
+              doc.font('Helvetica');
+            }
+            
+            let rowColor = WHITE;
+            if (user.successful >= 3) {
+              rowColor = '#FFCCCC';
+            } else if (user.successful >= 1) {
+              rowColor = '#FFF9C4';
+            } else if (index % 2 === 1) {
+              rowColor = LIGHT_GRAY;
+            }
+            
+            doc.rect(tableX, yPos, colWidths.reduce((a, b) => a + b), 22).fillAndStroke(rowColor, '#DDDDDD');
+            doc.fontSize(9).fillColor('#000000');
+            xPos = tableX + 8;
+            
+            // Anonymisiere E-Mail wenn deaktiviert
+            const displayEmail = showUserEmails ? user.email : `Benutzer ${index + 1}`;
+            [displayEmail, user.level, user.sent, user.successful, user.clicked, user.trainingsCompleted, user.vulnerability + '%'].forEach((val, i) => {
+              doc.text(String(val), xPos, yPos + 6, { width: colWidths[i] - 16, ellipsis: true });
+              xPos += colWidths[i];
+            });
+            yPos += 22;
+          });
+        }
         
         yPos += 30;
         
