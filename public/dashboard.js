@@ -42,6 +42,8 @@ function switchTab(tabName) {
         loadCustomersForSelect();
     } else if (tabName === 'reports') {
         loadReports();
+    } else if (tabName === 'settings') {
+        loadEmailSettings();
     }
 }
 

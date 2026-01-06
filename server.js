@@ -9,6 +9,7 @@ const { requireAuth } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const customerRoutes = require('./routes/customers');
 const reportRoutes = require('./routes/reports');
+const emailSettingsRoutes = require('./routes/email-settings');
 
 const app = express();
 const PORT = config.port;
@@ -32,6 +33,7 @@ app.use(express.static('public'));
 app.use('/api/auth', authRoutes);
 app.use('/api/customers', requireAuth, customerRoutes);
 app.use('/api/reports', requireAuth, reportRoutes);
+app.use('/api/email-settings', requireAuth, emailSettingsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Intelego Awareness Tool is running' });

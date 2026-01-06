@@ -96,6 +96,21 @@ db.serialize(() => {
   `);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS email_settings (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      imap_host TEXT,
+      imap_port INTEGER DEFAULT 993,
+      email_username TEXT,
+      email_password TEXT,
+      monitoring_folder TEXT DEFAULT 'INBOX',
+      check_interval INTEGER DEFAULT 15,
+      monitoring_enabled BOOLEAN DEFAULT 0,
+      last_check DATETIME,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS scenario_stats (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       report_id INTEGER NOT NULL,
