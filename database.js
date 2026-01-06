@@ -62,11 +62,17 @@ db.serialize(() => {
 
   const bcrypt = require('bcrypt');
   const defaultPassword = bcrypt.hashSync('admin123', 10);
+  const intelegoPassword = bcrypt.hashSync('Intelego01', 10);
   
   db.run(`
     INSERT OR IGNORE INTO users (id, username, password) 
     VALUES (1, 'admin', ?)
   `, [defaultPassword]);
+  
+  db.run(`
+    INSERT OR IGNORE INTO users (id, username, password) 
+    VALUES (2, 'intelego', ?)
+  `, [intelegoPassword]);
 });
 
 module.exports = db;
