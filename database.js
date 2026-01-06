@@ -38,6 +38,44 @@ db.serialize(() => {
     )
   `);
 
+  // Migration: Add new columns if they don't exist
+  db.all("PRAGMA table_info(customers)", (err, columns) => {
+    if (err) return;
+    
+    const columnNames = columns.map(col => col.name);
+    
+    if (!columnNames.includes('email')) {
+      db.run("ALTER TABLE customers ADD COLUMN email TEXT");
+    }
+    if (!columnNames.includes('phone')) {
+      db.run("ALTER TABLE customers ADD COLUMN phone TEXT");
+    }
+    if (!columnNames.includes('address')) {
+      db.run("ALTER TABLE customers ADD COLUMN address TEXT");
+    }
+    if (!columnNames.includes('city')) {
+      db.run("ALTER TABLE customers ADD COLUMN city TEXT");
+    }
+    if (!columnNames.includes('postal_code')) {
+      db.run("ALTER TABLE customers ADD COLUMN postal_code TEXT");
+    }
+    if (!columnNames.includes('country')) {
+      db.run("ALTER TABLE customers ADD COLUMN country TEXT");
+    }
+    if (!columnNames.includes('pdf_show_user_emails')) {
+      db.run("ALTER TABLE customers ADD COLUMN pdf_show_user_emails BOOLEAN DEFAULT 1");
+    }
+    if (!columnNames.includes('pdf_show_user_names')) {
+      db.run("ALTER TABLE customers ADD COLUMN pdf_show_user_names BOOLEAN DEFAULT 1");
+    }
+    if (!columnNames.includes('pdf_show_detailed_stats')) {
+      db.run("ALTER TABLE customers ADD COLUMN pdf_show_detailed_stats BOOLEAN DEFAULT 1");
+    }
+    if (!columnNames.includes('notes')) {
+      db.run("ALTER TABLE customers ADD COLUMN notes TEXT");
+    }
+  });
+
   db.run(`
     CREATE TABLE IF NOT EXISTS reports (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

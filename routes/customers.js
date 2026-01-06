@@ -25,7 +25,8 @@ router.post('/', (req, res) => {
      pdf_show_user_emails !== false ? 1 : 0, pdf_show_user_names !== false ? 1 : 0, pdf_show_detailed_stats !== false ? 1 : 0, notes || null],
     function(err) {
       if (err) {
-        return res.status(500).json({ error: 'Kunde konnte nicht erstellt werden' });
+        console.error('Fehler beim Erstellen des Kunden:', err);
+        return res.status(500).json({ error: 'Kunde konnte nicht erstellt werden: ' + err.message });
       }
       
       res.json({ id: this.lastID, name: name.trim(), success: true });
