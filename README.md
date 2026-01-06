@@ -1,4 +1,4 @@
-# 🐝 Hornet Awareness Tool
+# 🐝 Intelego Awareness Tool
 
 Eine einfache, Docker-basierte Webanwendung.
 
@@ -12,14 +12,15 @@ Eine einfache, Docker-basierte Webanwendung.
 
 ### Mit Docker (Empfohlen)
 
-1. **Repository klonen oder öffnen**
+1. **Repository klonen**
    ```bash
-   cd "G:/Meine Ablage/8 - Intelego Projekte/Hornet Awareness Tool"
+   git clone https://github.com/sysexperts/intelego-awareness-tool.git
+   cd intelego-awareness-tool
    ```
 
 2. **Docker Container starten**
    ```bash
-   docker-compose up --build
+   docker compose up --build -d
    ```
 
 3. **App öffnen**
@@ -42,27 +43,11 @@ Eine einfache, Docker-basierte Webanwendung.
 
 ## 📦 Deployment
 
-### GitHub Integration
-
-1. **Git Repository initialisieren**
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   ```
-
-2. **Mit GitHub verbinden**
-   ```bash
-   git remote add origin https://github.com/DEIN-USERNAME/hornet-awareness-tool.git
-   git branch -M main
-   git push -u origin main
-   ```
-
 ### Deployment Optionen
 
 - **Railway.app**: Verbinde dein GitHub Repo
 - **Render.com**: Automatisches Deployment via GitHub
-- **Heroku**: Container Registry nutzen
+- **Fly.io**: Container Deployment
 - **DigitalOcean**: App Platform mit GitHub Integration
 
 ## 🛠️ Entwicklung
@@ -103,5 +88,5 @@ Eine einfache, Docker-basierte Webanwendung.
 
 Bei Problemen:
 - Prüfe ob Docker läuft: `docker --version`
-- Prüfe Logs: `docker-compose logs`
-- Stoppe Container: `docker-compose down`
+- Prüfe Logs: `docker compose logs`
+- Stoppe Container: `docker compose down`
