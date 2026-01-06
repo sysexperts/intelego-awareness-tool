@@ -24,6 +24,16 @@ db.serialize(() => {
     CREATE TABLE IF NOT EXISTS customers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
+      email TEXT,
+      phone TEXT,
+      address TEXT,
+      city TEXT,
+      postal_code TEXT,
+      country TEXT,
+      pdf_show_user_emails BOOLEAN DEFAULT 1,
+      pdf_show_user_names BOOLEAN DEFAULT 1,
+      pdf_show_detailed_stats BOOLEAN DEFAULT 1,
+      notes TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);

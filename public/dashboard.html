@@ -140,20 +140,113 @@
         </div>
     </div>
     
-    <div id="addCustomerModal" class="modal">
-        <div class="modal-content">
+    <!-- Add/Edit Customer Modal -->
+    <div id="customerModal" class="modal">
+        <div class="modal-content modal-large">
             <div class="modal-header">
-                <h3>Neuer Kunde</h3>
-                <button onclick="closeAddCustomerModal()" class="close-btn">&times;</button>
+                <h3 id="customerModalTitle">Neuer Kunde</h3>
+                <button onclick="closeCustomerModal()" class="close-btn">&times;</button>
             </div>
-            <form id="addCustomerForm">
-                <div class="form-group">
-                    <label for="customerName">Kundenname *</label>
-                    <input type="text" id="customerName" required>
+            <form id="customerForm">
+                <input type="hidden" id="customerId">
+                
+                <div class="modal-tabs">
+                    <button type="button" class="modal-tab active" onclick="switchModalTab('basic')">Basisdaten</button>
+                    <button type="button" class="modal-tab" onclick="switchModalTab('contact')">Kontaktdaten</button>
+                    <button type="button" class="modal-tab" onclick="switchModalTab('pdf')">PDF-Einstellungen</button>
                 </div>
+                
+                <!-- Basic Data Tab -->
+                <div id="basicTab" class="modal-tab-content active">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customerName">Firmenname *</label>
+                            <input type="text" id="customerName" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerNotes">Notizen</label>
+                        <textarea id="customerNotes" rows="4" placeholder="Interne Notizen zum Kunden..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Contact Data Tab -->
+                <div id="contactTab" class="modal-tab-content">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customerEmail">E-Mail</label>
+                            <input type="email" id="customerEmail" placeholder="kontakt@firma.de">
+                        </div>
+                        <div class="form-group">
+                            <label for="customerPhone">Telefon</label>
+                            <input type="tel" id="customerPhone" placeholder="+49 123 456789">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerAddress">Straße & Hausnummer</label>
+                        <input type="text" id="customerAddress" placeholder="Musterstraße 123">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customerPostalCode">PLZ</label>
+                            <input type="text" id="customerPostalCode" placeholder="12345">
+                        </div>
+                        <div class="form-group">
+                            <label for="customerCity">Stadt</label>
+                            <input type="text" id="customerCity" placeholder="Berlin">
+                        </div>
+                        <div class="form-group">
+                            <label for="customerCountry">Land</label>
+                            <input type="text" id="customerCountry" placeholder="Deutschland" value="Deutschland">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PDF Settings Tab -->
+                <div id="pdfTab" class="modal-tab-content">
+                    <p class="info-text">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        Legen Sie fest, welche Informationen im PDF-Report angezeigt werden sollen (DSGVO-konform).
+                    </p>
+                    
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="pdfShowUserEmails" checked>
+                            <span class="checkbox-text">
+                                <strong>E-Mail-Adressen anzeigen</strong>
+                                <small>Zeigt die E-Mail-Adressen der Mitarbeiter in der Detailanalyse</small>
+                            </span>
+                        </label>
+                        
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="pdfShowUserNames" checked>
+                            <span class="checkbox-text">
+                                <strong>Namen anzeigen</strong>
+                                <small>Zeigt die Namen der Mitarbeiter (falls vorhanden)</small>
+                            </span>
+                        </label>
+                        
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="pdfShowDetailedStats" checked>
+                            <span class="checkbox-text">
+                                <strong>Detaillierte Statistiken</strong>
+                                <small>Zeigt detaillierte Benutzer-Statistiken und anfälligste Mitarbeiter</small>
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>Hinweis:</strong> Wenn alle Optionen deaktiviert sind, enthält der Report nur aggregierte, anonymisierte Daten.
+                    </div>
+                </div>
+                
                 <div class="modal-footer">
-                    <button type="button" onclick="closeAddCustomerModal()" class="btn btn-secondary">Abbrechen</button>
-                    <button type="submit" class="btn btn-primary">Erstellen</button>
+                    <button type="button" onclick="closeCustomerModal()" class="btn btn-secondary">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Speichern</button>
                 </div>
             </form>
         </div>

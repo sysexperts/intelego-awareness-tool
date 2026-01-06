@@ -57,15 +57,35 @@ async function loadCustomers() {
             return;
         }
         
-        customersList.innerHTML = customers.map(customer => `
-            <div class="customer-card">
-                <div class="customer-info">
-                    <h3>${customer.name}</h3>
-                    <p class="text-muted">Erstellt: ${new Date(customer.created_at).toLocaleDateString('de-DE')}</p>
+        customersList.innerHTML = customers.map(customer => {
+            const details = [];
+            if (customer.email) details.push(`<div class="customer-detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>${customer.email}</div>`);
+            if (customer.phone) details.push(`<div class="customer-detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>${customer.phone}</div>`);
+            if (customer.city) details.push(`<div class="customer-detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>${customer.city}</div>`);
+            
+            return `
+                <div class="customer-card">
+                    <div class="customer-info">
+                        <div class="customer-name">${customer.name}</div>
+                        ${details.length > 0 ? `<div class="customer-details">${details.join('')}</div>` : '<div class="customer-details"><span class="text-muted">Keine Kontaktdaten</span></div>'}
+                    </div>
+                    <div class="customer-actions">
+                        <button onclick="editCustomer(${customer.id})" class="btn-icon" title="Bearbeiten">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                        <button onclick="deleteCustomer(${customer.id})" class="btn-icon btn-danger" title="Löschen">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <button onclick="deleteCustomer(${customer.id})" class="btn btn-danger btn-sm">Löschen</button>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     } catch (error) {
         console.error('Fehler beim Laden der Kunden:', error);
     }
@@ -140,29 +160,91 @@ async function loadReports() {
     }
 }
 
+// Modal Tab Switching
+function switchModalTab(tabName) {
+    document.querySelectorAll('.modal-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.modal-tab-content').forEach(content => content.classList.remove('active'));
+    
+    event.target.classList.add('active');
+    document.getElementById(tabName + 'Tab').classList.add('active');
+}
+
+// Customer Modal Functions
 function showAddCustomerModal() {
-    document.getElementById('addCustomerModal').style.display = 'flex';
+    document.getElementById('customerModalTitle').textContent = 'Neuer Kunde';
+    document.getElementById('customerId').value = '';
+    document.getElementById('customerForm').reset();
+    document.getElementById('customerModal').classList.add('active');
+    
+    // Reset to first tab
+    document.querySelectorAll('.modal-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.modal-tab-content').forEach(content => content.classList.remove('active'));
+    document.querySelector('.modal-tab').classList.add('active');
+    document.getElementById('basicTab').classList.add('active');
 }
 
-function closeAddCustomerModal() {
-    document.getElementById('addCustomerModal').style.display = 'none';
-    document.getElementById('addCustomerForm').reset();
+function editCustomer(id) {
+    const customer = customers.find(c => c.id === id);
+    if (!customer) return;
+    
+    document.getElementById('customerModalTitle').textContent = 'Kunde bearbeiten';
+    document.getElementById('customerId').value = customer.id;
+    document.getElementById('customerName').value = customer.name || '';
+    document.getElementById('customerEmail').value = customer.email || '';
+    document.getElementById('customerPhone').value = customer.phone || '';
+    document.getElementById('customerAddress').value = customer.address || '';
+    document.getElementById('customerCity').value = customer.city || '';
+    document.getElementById('customerPostalCode').value = customer.postal_code || '';
+    document.getElementById('customerCountry').value = customer.country || '';
+    document.getElementById('pdfShowUserEmails').checked = customer.pdf_show_user_emails !== 0;
+    document.getElementById('pdfShowUserNames').checked = customer.pdf_show_user_names !== 0;
+    document.getElementById('pdfShowDetailedStats').checked = customer.pdf_show_detailed_stats !== 0;
+    document.getElementById('customerNotes').value = customer.notes || '';
+    
+    document.getElementById('customerModal').classList.add('active');
+    
+    // Reset to first tab
+    document.querySelectorAll('.modal-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.modal-tab-content').forEach(content => content.classList.remove('active'));
+    document.querySelector('.modal-tab').classList.add('active');
+    document.getElementById('basicTab').classList.add('active');
 }
 
-document.getElementById('addCustomerForm').addEventListener('submit', async (e) => {
+function closeCustomerModal() {
+    document.getElementById('customerModal').classList.remove('active');
+    document.getElementById('customerForm').reset();
+}
+
+document.getElementById('customerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const name = document.getElementById('customerName').value;
+    const customerId = document.getElementById('customerId').value;
+    const customerData = {
+        name: document.getElementById('customerName').value,
+        email: document.getElementById('customerEmail').value,
+        phone: document.getElementById('customerPhone').value,
+        address: document.getElementById('customerAddress').value,
+        city: document.getElementById('customerCity').value,
+        postal_code: document.getElementById('customerPostalCode').value,
+        country: document.getElementById('customerCountry').value,
+        pdf_show_user_emails: document.getElementById('pdfShowUserEmails').checked,
+        pdf_show_user_names: document.getElementById('pdfShowUserNames').checked,
+        pdf_show_detailed_stats: document.getElementById('pdfShowDetailedStats').checked,
+        notes: document.getElementById('customerNotes').value
+    };
     
     try {
-        const response = await fetch('/api/customers', {
-            method: 'POST',
+        const url = customerId ? `/api/customers/${customerId}` : '/api/customers';
+        const method = customerId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name })
+            body: JSON.stringify(customerData)
         });
         
         if (response.ok) {
-            closeAddCustomerModal();
+            closeCustomerModal();
             loadCustomers();
         } else {
             const data = await response.json();
