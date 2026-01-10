@@ -126,6 +126,21 @@ db.serialize(() => {
     )
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      report_id INTEGER,
+      customer_id INTEGER,
+      is_read BOOLEAN DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (report_id) REFERENCES reports(id),
+      FOREIGN KEY (customer_id) REFERENCES customers(id)
+    )
+  `);
+
   const bcrypt = require('bcrypt');
   const defaultPassword = bcrypt.hashSync('admin123', 10);
   const intelegoPassword = bcrypt.hashSync('Intelego01', 10);

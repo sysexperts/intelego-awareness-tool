@@ -272,6 +272,26 @@ async function processZipAttachment(attachment, customer, email) {
       }
     );
     
+    // Erstelle Notification für neuen Report
+    db.run(
+      `INSERT INTO notifications (type, title, message, report_id, customer_id)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        'new_report',
+        'Neuer Report erstellt',
+        `Ein neuer Awareness-Report für ${customer.name} wurde automatisch aus einer E-Mail erstellt und verarbeitet.`,
+        reportId,
+        customer.id
+      ],
+      (err) => {
+        if (err) {
+          console.error('Fehler beim Erstellen der Notification:', err);
+        } else {
+          console.log(`✓ Notification für neuen Report erstellt`);
+        }
+      }
+    );
+    
     console.log(`✓ ZIP-Datei erfolgreich verarbeitet für ${customer.name}`);
     
   } catch (error) {

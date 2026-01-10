@@ -52,6 +52,14 @@
         </nav>
         
         <div class="sidebar-footer">
+            <div class="notification-bell" onclick="toggleNotifications()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+            </div>
+            
             <div class="user-profile">
                 <div class="user-avatar">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -409,7 +417,22 @@
         </div>
     </div>
     
+    <!-- Notification Popup -->
+    <div id="notificationPopup" class="notification-popup">
+        <div class="notification-header">
+            <h3>Benachrichtigungen</h3>
+            <div class="notification-actions">
+                <button onclick="markAllAsRead()">Alle gelesen</button>
+                <button onclick="toggleNotifications()">✕</button>
+            </div>
+        </div>
+        <div id="notificationList" class="notification-list">
+            <!-- Notifications werden hier dynamisch eingefügt -->
+        </div>
+    </div>
+
     <script src="dashboard.js"></script>
     <script src="dashboard-email-settings.js"></script>
+    <script src="notifications.js"></script>
 </body>
 </html>
