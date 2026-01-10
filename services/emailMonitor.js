@@ -442,7 +442,8 @@ async function checkNow() {
       
       try {
         console.log('🔍 Manuelle E-Mail-Prüfung gestartet...');
-        await checkEmails();
+        await checkForNewEmails(settings);
+        updateLastCheck();
         resolve({ success: true, message: 'E-Mail-Postfach erfolgreich geprüft' });
       } catch (error) {
         console.error('Fehler bei manueller E-Mail-Prüfung:', error);
