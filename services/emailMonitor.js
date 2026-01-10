@@ -3,9 +3,10 @@ const { simpleParser } = require('mailparser');
 const fs = require('fs');
 const path = require('path');
 const db = require('../database');
-const { analyzeData } = require('./dataAnalyzer');
+const { processZipFile } = require('./zipProcessor');
+const { analyzePhishingData } = require('./phishingAnalyzer');
 const { generatePDFReport } = require('./pdfGenerator');
-const { sendEmail } = require('./emailService');
+const { sendReportEmail } = require('./emailService');
 const config = require('../config');
 
 let monitoringInterval = null;
@@ -238,7 +239,8 @@ async function processZipAttachment(attachment, customer, email) {
   
   try {
     // Analysiere ZIP-Datei
-    const analysis = await analyzeData(tempZipPath);
+    const csvData = await processZipFile(tempZipPath);
+    const analysis = analyzePhishingData(csvData);
     
     // Generiere PDF
     const reportsDir = path.join(__dirname, '..', 'reports');
@@ -256,7 +258,8 @@ async function processZipAttachment(attachment, customer, email) {
     const reportId = await saveReport(customer.id, analysis, pdfPath);
     
     // Sende E-Mail an support@intelego.de
-    await sendReportEmail(customer, pdfPath, email);
+    const emailSubject = `Monatlicher Hornetsecurity Awareness Reporting für ${customer.name}`;
+    await sendReportEmail(customer.name, pdfPath, 'support@intelego.de');
     
     // Markiere E-Mail als verarbeitet in DB
     db.run(
@@ -305,38 +308,6 @@ function saveReport(customerId, analysis, pdfPath) {
       }
     );
   });
-}
-
-// Send report email to support
-async function sendReportEmail(customer, pdfPath, originalEmail) {
-  const subject = `Monatlicher Hornetsecurity Awareness Reporting für ${customer.name}`;
-  const text = `
-Hallo,
-
-anbei erhalten Sie den automatisch generierten Awareness-Report für den Kunden ${customer.name}.
-
-Dieser Report wurde automatisch aus einer eingehenden E-Mail von HornetSecurity verarbeitet.
-
-Original-Absender: ${originalEmail.from.text}
-Original-Betreff: ${originalEmail.subject}
-Verarbeitungsdatum: ${new Date().toLocaleString('de-DE')}
-
-Mit freundlichen Grüßen
-Intelego Awareness Tool (Automatisch generiert)
-  `;
-  
-  try {
-    await sendEmail(
-      'support@intelego.de',
-      subject,
-      text,
-      pdfPath
-    );
-    console.log('✓ Report-E-Mail an support@intelego.de versendet');
-  } catch (error) {
-    console.error('Fehler beim Versenden der Report-E-Mail:', error);
-    throw error;
-  }
 }
 
 // Update last check timestamp
