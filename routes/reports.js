@@ -151,7 +151,7 @@ router.get('/', (req, res) => {
   db.all(`
     SELECT r.*, c.name as customer_name 
     FROM reports r 
-    JOIN customers c ON r.customer_id = c.id 
+    LEFT JOIN customers c ON r.customer_id = c.id 
     ORDER BY r.upload_date DESC
   `, (err, reports) => {
     if (err) {
