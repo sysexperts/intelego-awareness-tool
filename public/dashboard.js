@@ -222,7 +222,7 @@ function displayReports(reportsToDisplay) {
                          report.risk_level === 'Hoch' ? 'risk-high' : 
                          report.risk_level === 'Mittel' ? 'risk-medium' : 'risk-low';
         
-        const uploadDate = new Date(report.upload_date);
+        const uploadDate = new Date(report.upload_date + 'Z');
         const formattedDate = uploadDate.toLocaleDateString('de-DE', {
             day: '2-digit',
             month: 'long',
@@ -266,19 +266,19 @@ function displayReports(reportsToDisplay) {
                 <div class="report-stats">
                     <div class="stat">
                         <span class="stat-label">Klickrate</span>
-                        <span class="stat-value">${report.click_rate}%</span>
+                        <span class="stat-value">${report.click_rate !== null ? report.click_rate + '%' : '0%'}</span>
                     </div>
                     <div class="stat">
                         <span class="stat-label">Erfolgsquote</span>
-                        <span class="stat-value">${report.success_rate}%</span>
+                        <span class="stat-value">${report.success_rate !== null ? report.success_rate + '%' : '0%'}</span>
                     </div>
                     <div class="stat">
                         <span class="stat-label">Szenarien</span>
-                        <span class="stat-value">${report.total_scenarios}</span>
+                        <span class="stat-value">${report.total_scenarios || 0}</span>
                     </div>
                     <div class="stat">
                         <span class="stat-label">Benutzer</span>
-                        <span class="stat-value">${report.total_users}</span>
+                        <span class="stat-value">${report.total_users || 0}</span>
                     </div>
                 </div>
                 <div class="report-footer">

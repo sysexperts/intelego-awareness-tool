@@ -186,8 +186,15 @@ async function identifyCustomerFromCSV(csvData) {
     // Extrahiere alle E-Mail-Domains aus den CSV-Daten
     const emailDomains = new Set();
     
-    if (csvData && csvData.length > 0) {
-      csvData.forEach(row => {
+    // csvData ist ein Objekt mit scenarios, users, company
+    const allRows = [
+      ...(csvData.scenarios || []),
+      ...(csvData.users || []),
+      ...(csvData.company || [])
+    ];
+    
+    if (allRows.length > 0) {
+      allRows.forEach(row => {
         // Suche nach E-Mail-Adressen in allen Feldern
         Object.values(row).forEach(value => {
           if (typeof value === 'string') {
@@ -224,6 +231,7 @@ async function identifyCustomerFromCSV(csvData) {
       }
       
       console.log('⚠️ Keine Domain-Übereinstimmung gefunden');
+      console.log(`   Verfügbare Kunden-Domains: ${customers.map(c => c.domain).join(', ')}`);
       resolve(null);
     });
   });
