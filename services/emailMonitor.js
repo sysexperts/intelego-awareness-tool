@@ -180,7 +180,56 @@ async function processEmail(email, attributes, imap) {
   }
 }
 
-// Identify customer from email
+// Identify customer from email and CSV data
+async function identifyCustomerFromCSV(csvData) {
+  return new Promise((resolve, reject) => {
+    // Extrahiere alle E-Mail-Domains aus den CSV-Daten
+    const emailDomains = new Set();
+    
+    if (csvData && csvData.length > 0) {
+      csvData.forEach(row => {
+        // Suche nach E-Mail-Adressen in allen Feldern
+        Object.values(row).forEach(value => {
+          if (typeof value === 'string') {
+            const emailMatch = value.match(/[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+            if (emailMatch) {
+              emailDomains.add(emailMatch[1].toLowerCase());
+            }
+          }
+        });
+      });
+    }
+    
+    console.log(`Gefundene E-Mail-Domains in CSV: ${Array.from(emailDomains).join(', ')}`);
+    
+    if (emailDomains.size === 0) {
+      return resolve(null);
+    }
+    
+    // Suche Kunde anhand Domain
+    db.all('SELECT * FROM customers WHERE domain IS NOT NULL AND domain != ""', (err, customers) => {
+      if (err) {
+        return reject(err);
+      }
+      
+      for (const customer of customers) {
+        const customerDomain = customer.domain.toLowerCase();
+        
+        for (const domain of emailDomains) {
+          if (domain === customerDomain || domain.endsWith('.' + customerDomain)) {
+            console.log(`✓ Kunde identifiziert via Domain-Matching: ${customer.name} (Domain: ${customerDomain})`);
+            return resolve(customer);
+          }
+        }
+      }
+      
+      console.log('⚠️ Keine Domain-Übereinstimmung gefunden');
+      resolve(null);
+    });
+  });
+}
+
+// Identify customer from email (fallback method)
 async function identifyCustomer(email) {
   return new Promise((resolve, reject) => {
     // Extrahiere E-Mail-Adresse aus "From"
@@ -221,12 +270,6 @@ async function identifyCustomer(email) {
             }
           }
           
-          // Falls immer noch nicht gefunden, verwende ersten Kunden als Fallback
-          console.log('Kunde konnte nicht identifiziert werden - verwende ersten Kunden als Fallback');
-          if (customers.length > 0) {
-            return resolve(customers[0]);
-          }
-          
           resolve(null);
         });
       }
@@ -236,10 +279,7 @@ async function identifyCustomer(email) {
 
 // Process ZIP attachment
 async function processZipAttachment(attachment, customer, email) {
-  const customerName = customer ? customer.name : 'Unbekannter Kunde';
-  const customerId = customer ? customer.id : null;
-  
-  console.log(`Verarbeite ZIP-Anhang: ${attachment.filename} für Kunde: ${customerName}`);
+  console.log(`Verarbeite ZIP-Anhang: ${attachment.filename}`);
   
   // Speichere ZIP temporär
   const uploadsDir = path.join(__dirname, '..', 'uploads');
@@ -253,6 +293,18 @@ async function processZipAttachment(attachment, customer, email) {
   try {
     // Analysiere ZIP-Datei
     const csvData = await processZipFile(tempZipPath);
+    
+    // Versuche Kunde anhand CSV-Daten (Domain-Matching) zu identifizieren
+    if (!customer) {
+      console.log('Versuche Kundenzuordnung via Domain-Matching aus CSV-Daten...');
+      customer = await identifyCustomerFromCSV(csvData);
+    }
+    
+    const customerName = customer ? customer.name : 'Unbekannter Kunde';
+    const customerId = customer ? customer.id : null;
+    
+    console.log(`→ Verarbeite für Kunde: ${customerName}`);
+    
     const analysis = analyzePhishingData(csvData);
     
     // Generiere PDF

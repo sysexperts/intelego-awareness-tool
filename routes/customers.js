@@ -12,16 +12,20 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { name, customer_number, email, phone, address, city, postal_code, country, pdf_show_user_emails, pdf_show_user_names, pdf_show_detailed_stats, notes } = req.body;
+  const { name, customer_number, email, phone, address, city, postal_code, country, domain, pdf_show_user_emails, pdf_show_user_names, pdf_show_detailed_stats, notes } = req.body;
   
   if (!name || name.trim() === '') {
     return res.status(400).json({ error: 'Kundenname erforderlich' });
   }
   
+  if (!domain || domain.trim() === '') {
+    return res.status(400).json({ error: 'Domain erforderlich (z.B. bilz.de)' });
+  }
+  
   db.run(
-    `INSERT INTO customers (name, customer_number, email, phone, address, city, postal_code, country, pdf_show_user_emails, pdf_show_user_names, pdf_show_detailed_stats, notes) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [name.trim(), customer_number || null, email || null, phone || null, address || null, city || null, postal_code || null, country || null, 
+    `INSERT INTO customers (name, customer_number, email, phone, address, city, postal_code, country, domain, pdf_show_user_emails, pdf_show_user_names, pdf_show_detailed_stats, notes) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [name.trim(), customer_number || null, email || null, phone || null, address || null, city || null, postal_code || null, country || null, domain.trim().toLowerCase(), 
      pdf_show_user_emails !== false ? 1 : 0, pdf_show_user_names !== false ? 1 : 0, pdf_show_detailed_stats !== false ? 1 : 0, notes || null],
     function(err) {
       if (err) {
@@ -36,18 +40,22 @@ router.post('/', (req, res) => {
 
 router.put('/:id', (req, res) => {
   const { id } = req.params;
-  const { name, customer_number, email, phone, address, city, postal_code, country, pdf_show_user_emails, pdf_show_user_names, pdf_show_detailed_stats, notes } = req.body;
+  const { name, customer_number, email, phone, address, city, postal_code, country, domain, pdf_show_user_emails, pdf_show_user_names, pdf_show_detailed_stats, notes } = req.body;
   
   if (!name || name.trim() === '') {
     return res.status(400).json({ error: 'Kundenname erforderlich' });
   }
   
+  if (!domain || domain.trim() === '') {
+    return res.status(400).json({ error: 'Domain erforderlich (z.B. bilz.de)' });
+  }
+  
   db.run(
     `UPDATE customers SET 
-      name = ?, customer_number = ?, email = ?, phone = ?, address = ?, city = ?, postal_code = ?, country = ?,
+      name = ?, customer_number = ?, email = ?, phone = ?, address = ?, city = ?, postal_code = ?, country = ?, domain = ?,
       pdf_show_user_emails = ?, pdf_show_user_names = ?, pdf_show_detailed_stats = ?, notes = ?
      WHERE id = ?`,
-    [name.trim(), customer_number || null, email || null, phone || null, address || null, city || null, postal_code || null, country || null,
+    [name.trim(), customer_number || null, email || null, phone || null, address || null, city || null, postal_code || null, country || null, domain.trim().toLowerCase(),
      pdf_show_user_emails ? 1 : 0, pdf_show_user_names ? 1 : 0, pdf_show_detailed_stats ? 1 : 0, notes || null, id],
     function(err) {
       if (err) {

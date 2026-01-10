@@ -368,6 +368,7 @@ function editCustomer(id) {
     document.getElementById('customerId').value = customer.id;
     document.getElementById('customerNumber').value = customer.customer_number || '';
     document.getElementById('customerName').value = customer.name || '';
+    document.getElementById('customerDomain').value = customer.domain || '';
     document.getElementById('customerEmail').value = customer.email || '';
     document.getElementById('customerPhone').value = customer.phone || '';
     document.getElementById('customerAddress').value = customer.address || '';
@@ -400,6 +401,7 @@ document.getElementById('customerForm').addEventListener('submit', async (e) => 
     const customerData = {
         name: document.getElementById('customerName').value,
         customer_number: document.getElementById('customerNumber').value,
+        domain: document.getElementById('customerDomain').value,
         email: document.getElementById('customerEmail').value,
         phone: document.getElementById('customerPhone').value,
         address: document.getElementById('customerAddress').value,

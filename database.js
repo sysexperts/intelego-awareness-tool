@@ -77,6 +77,9 @@ db.serialize(() => {
     if (!columnNames.includes('notes')) {
       db.run("ALTER TABLE customers ADD COLUMN notes TEXT");
     }
+    if (!columnNames.includes('domain')) {
+      db.run("ALTER TABLE customers ADD COLUMN domain TEXT NOT NULL DEFAULT ''");
+    }
   });
 
   db.run(`
