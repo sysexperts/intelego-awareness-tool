@@ -12,6 +12,9 @@ const reportRoutes = require('./routes/reports');
 const emailSettingsRoutes = require('./routes/email-settings');
 const notificationsRoutes = require('./routes/notifications');
 
+// Initialize email monitor (auto-starts if enabled)
+require('./services/emailMonitor');
+
 const app = express();
 const PORT = config.port;
 
