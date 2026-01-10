@@ -569,7 +569,7 @@ async function assignCustomer(reportId) {
 
 // Send report email
 async function sendReportEmail(reportId) {
-    if (!confirm('Report per E-Mail an support@intelego.net senden?')) {
+    if (!confirm('Report per E-Mail senden? Die E-Mail wird an die konfigurierte Empfänger-Adresse gesendet.')) {
         return;
     }
     

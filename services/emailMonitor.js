@@ -342,8 +342,7 @@ async function processZipAttachment(attachment, customer, email) {
     
     // E-Mail-Versand nur wenn Kunde zugeordnet ist
     if (customer) {
-      const emailSubject = `Monatlicher Hornetsecurity Awareness Reporting für ${customer.name}`;
-      await sendReportEmail(customer.name, pdfPath, 'support@intelego.net');
+      await sendReportEmail(customer.name, pdfPath);
     } else {
       console.log('⚠️ Report ohne Kundenzuordnung - E-Mail-Versand übersprungen');
     }

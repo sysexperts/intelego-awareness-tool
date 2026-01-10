@@ -19,6 +19,7 @@ async function loadEmailSettings() {
             document.getElementById('smtpUsername').value = settings.smtpUsername || '';
             document.getElementById('smtpPassword').value = settings.smtpPassword || '';
             document.getElementById('smtpFrom').value = settings.smtpFrom || '';
+            document.getElementById('recipientEmail').value = settings.recipientEmail || '';
         }
     } catch (error) {
         console.error('Fehler beim Laden der E-Mail-Einstellungen:', error);
@@ -89,7 +90,8 @@ document.getElementById('emailSettingsForm').addEventListener('submit', async (e
         smtpPort: parseInt(document.getElementById('smtpPort').value),
         smtpUsername: document.getElementById('smtpUsername').value,
         smtpPassword: document.getElementById('smtpPassword').value,
-        smtpFrom: document.getElementById('smtpFrom').value
+        smtpFrom: document.getElementById('smtpFrom').value,
+        recipientEmail: document.getElementById('recipientEmail').value
     };
     
     try {

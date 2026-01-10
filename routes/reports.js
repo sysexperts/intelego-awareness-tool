@@ -77,7 +77,7 @@ router.post('/upload', upload.single('zipfile'), async (req, res) => {
     
     let emailSent = false;
     if (recipientEmail && recipientEmail.trim() !== '') {
-      const emailResult = await sendReportEmail(customer.name, pdfPath, recipientEmail);
+      const emailResult = await sendReportEmail(customer.name, pdfPath);
       emailSent = emailResult.sent;
     }
     
@@ -263,8 +263,7 @@ router.post('/:id/send-email', (req, res) => {
     try {
       const emailResult = await sendReportEmail(
         report.customer_name, 
-        report.pdf_path, 
-        'support@intelego.net'
+        report.pdf_path
       );
       
       if (emailResult.sent) {

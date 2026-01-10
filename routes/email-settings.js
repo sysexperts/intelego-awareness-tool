@@ -34,14 +34,15 @@ router.get('/', (req, res) => {
       smtpPort: row.smtp_port,
       smtpUsername: row.smtp_username,
       smtpPassword: row.smtp_password,
-      smtpFrom: row.smtp_from
+      smtpFrom: row.smtp_from,
+      recipientEmail: row.recipient_email
     });
   });
 });
 
 // POST/UPDATE email settings
 router.post('/', (req, res) => {
-  const { imapHost, imapPort, emailUsername, emailPassword, monitoringFolder, checkInterval, monitoringEnabled, smtpHost, smtpPort, smtpUsername, smtpPassword, smtpFrom } = req.body;
+  const { imapHost, imapPort, emailUsername, emailPassword, monitoringFolder, checkInterval, monitoringEnabled, smtpHost, smtpPort, smtpUsername, smtpPassword, smtpFrom, recipientEmail } = req.body;
   
   if (!imapHost || !imapPort || !emailUsername || !emailPassword) {
     return res.status(400).json({ error: 'IMAP-Server, Port, E-Mail und Passwort sind erforderlich' });
@@ -57,12 +58,12 @@ router.post('/', (req, res) => {
       ? `UPDATE email_settings SET 
           imap_host = ?, imap_port = ?, email_username = ?, email_password = ?,
           monitoring_folder = ?, check_interval = ?, monitoring_enabled = ?,
-          smtp_host = ?, smtp_port = ?, smtp_username = ?, smtp_password = ?, smtp_from = ?,
+          smtp_host = ?, smtp_port = ?, smtp_username = ?, smtp_password = ?, smtp_from = ?, recipient_email = ?,
           updated_at = CURRENT_TIMESTAMP
          WHERE id = 1`
       : `INSERT INTO email_settings (id, imap_host, imap_port, email_username, email_password, 
-          monitoring_folder, check_interval, monitoring_enabled, smtp_host, smtp_port, smtp_username, smtp_password, smtp_from)
-         VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+          monitoring_folder, check_interval, monitoring_enabled, smtp_host, smtp_port, smtp_username, smtp_password, smtp_from, recipient_email)
+         VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     
     db.run(sql, [
       imapHost,
@@ -76,7 +77,8 @@ router.post('/', (req, res) => {
       smtpPort || 587,
       smtpUsername || null,
       smtpPassword || null,
-      smtpFrom || null
+      smtpFrom || null,
+      recipientEmail || null
     ], function(err) {
       if (err) {
         console.error('Fehler beim Speichern der Einstellungen:', err);

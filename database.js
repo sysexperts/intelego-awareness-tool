@@ -124,6 +124,7 @@ db.serialize(() => {
       smtp_username TEXT,
       smtp_password TEXT,
       smtp_from TEXT,
+      recipient_email TEXT,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -146,6 +147,9 @@ db.serialize(() => {
     }
     if (!columnNames.includes('smtp_from')) {
       db.run("ALTER TABLE email_settings ADD COLUMN smtp_from TEXT");
+    }
+    if (!columnNames.includes('recipient_email')) {
+      db.run("ALTER TABLE email_settings ADD COLUMN recipient_email TEXT");
     }
   });
 
