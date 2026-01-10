@@ -143,6 +143,25 @@ async function checkForNewEmails(settings) {
 async function processEmail(email, attributes, imap, seqno) {
   console.log('Verarbeite E-Mail:', email.subject);
   
+  // Prüfe ob E-Mail bereits verarbeitet wurde anhand Message-ID
+  const messageId = email.messageId;
+  if (!messageId) {
+    console.log('⚠️ E-Mail hat keine Message-ID - überspringe');
+    return;
+  }
+  
+  const alreadyProcessed = await new Promise((resolve, reject) => {
+    db.get('SELECT id FROM processed_emails WHERE message_id = ?', [messageId], (err, row) => {
+      if (err) reject(err);
+      else resolve(!!row);
+    });
+  });
+  
+  if (alreadyProcessed) {
+    console.log('✓ E-Mail wurde bereits verarbeitet (Message-ID:', messageId, ') - überspringe');
+    return;
+  }
+  
   // Prüfe ob E-Mail ZIP-Anhänge hat
   if (!email.attachments || email.attachments.length === 0) {
     console.log('Keine Anhänge gefunden');
@@ -174,6 +193,19 @@ async function processEmail(email, attributes, imap, seqno) {
   // Verarbeite nur den ersten ZIP-Anhang (verhindert doppelte Reports)
   try {
     await processZipAttachment(zipAttachments[0], customer, email);
+    
+    // Markiere E-Mail als verarbeitet in Datenbank
+    await new Promise((resolve, reject) => {
+      db.run('INSERT INTO processed_emails (message_id) VALUES (?)', [messageId], (err) => {
+        if (err) {
+          console.error('Fehler beim Markieren der E-Mail als verarbeitet:', err);
+          reject(err);
+        } else {
+          console.log('✓ E-Mail als verarbeitet markiert (Message-ID:', messageId, ')');
+          resolve();
+        }
+      });
+    });
     
     // Markiere E-Mail als gelesen nach erfolgreicher Verarbeitung
     if (imap && seqno) {
