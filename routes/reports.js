@@ -85,8 +85,8 @@ router.post('/upload', upload.single('zipfile'), async (req, res) => {
       db.run(`
         INSERT INTO reports (
           customer_id, total_scenarios, total_users, click_rate, 
-          success_rate, risk_level, pdf_path, email_sent
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          success_rate, risk_level, pdf_path, email_sent, source
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         customerId,
         analysis.overview.totalScenarios,
@@ -95,7 +95,8 @@ router.post('/upload', upload.single('zipfile'), async (req, res) => {
         analysis.overview.erfolgsquote,
         analysis.overview.sicherheitsbewertung,
         pdfPath,
-        emailSent ? 1 : 0
+        emailSent ? 1 : 0,
+        'manual'
       ], function(err) {
         if (err) reject(err);
         else resolve(this.lastID);

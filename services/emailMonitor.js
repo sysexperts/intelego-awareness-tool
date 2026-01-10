@@ -309,8 +309,8 @@ async function processZipAttachment(attachment, customer, email) {
 function saveReport(customerId, analysis, pdfPath) {
   return new Promise((resolve, reject) => {
     db.run(
-      `INSERT INTO reports (customer_id, total_scenarios, total_users, click_rate, success_rate, risk_level, pdf_path, email_sent)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
+      `INSERT INTO reports (customer_id, total_scenarios, total_users, click_rate, success_rate, risk_level, pdf_path, email_sent, source)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
       [
         customerId,
         analysis.overview.totalScenarios,
@@ -318,7 +318,8 @@ function saveReport(customerId, analysis, pdfPath) {
         analysis.overview.clickRate,
         analysis.overview.successRate,
         analysis.overview.riskLevel,
-        pdfPath
+        pdfPath,
+        'email'
       ],
       function(err) {
         if (err) {

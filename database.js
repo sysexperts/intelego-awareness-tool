@@ -91,9 +91,19 @@ db.serialize(() => {
       risk_level TEXT,
       pdf_path TEXT,
       email_sent BOOLEAN DEFAULT 0,
+      source TEXT DEFAULT 'manual',
       FOREIGN KEY (customer_id) REFERENCES customers(id)
     )
   `);
+
+  // Add source column to existing reports table if it doesn't exist
+  db.all("PRAGMA table_info(reports)", (err, columns) => {
+    if (err) return;
+    const columnNames = columns.map(col => col.name);
+    if (!columnNames.includes('source')) {
+      db.run("ALTER TABLE reports ADD COLUMN source TEXT DEFAULT 'manual'");
+    }
+  });
 
   db.run(`
     CREATE TABLE IF NOT EXISTS email_settings (

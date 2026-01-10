@@ -269,6 +269,7 @@ function displayReports(reportsToDisplay) {
                 </div>
                 <div class="report-footer">
                     <div class="report-actions">
+                        ${report.source === 'email' ? '<span class="badge-auto">🤖 Automatischer Report</span>' : '<span class="badge-manual">👤 Manueller Report</span>'}
                         ${report.email_sent ? '<span class="badge-success">✓ E-Mail versendet</span>' : ''}
                         <a href="/api/reports/download/${report.id}" class="btn btn-primary btn-sm">PDF Download</a>
                     </div>
