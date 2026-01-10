@@ -201,20 +201,31 @@ async function identifyCustomer(email) {
           return resolve(customer);
         }
         
-        // Falls nicht gefunden, versuche anhand Betreff zu identifizieren
-        // z.B. "Awareness Report für Intelego GmbH"
+        // Falls nicht gefunden, versuche anhand Betreff oder Body zu identifizieren
         const subject = email.subject || '';
+        const body = email.text || '';
         
         db.all('SELECT * FROM customers', (err, customers) => {
           if (err) {
             return reject(err);
           }
           
-          // Suche nach Kundenname im Betreff
+          // Suche nach Kundenname im Betreff oder Body
           for (const cust of customers) {
-            if (subject.toLowerCase().includes(cust.name.toLowerCase())) {
+            const customerNameLower = cust.name.toLowerCase();
+            const subjectLower = subject.toLowerCase();
+            const bodyLower = body.toLowerCase();
+            
+            if (subjectLower.includes(customerNameLower) || bodyLower.includes(customerNameLower)) {
+              console.log(`Kunde gefunden im ${subjectLower.includes(customerNameLower) ? 'Betreff' : 'E-Mail-Text'}: ${cust.name}`);
               return resolve(cust);
             }
+          }
+          
+          // Falls immer noch nicht gefunden, verwende ersten Kunden als Fallback
+          console.log('Kunde konnte nicht identifiziert werden - verwende ersten Kunden als Fallback');
+          if (customers.length > 0) {
+            return resolve(customers[0]);
           }
           
           resolve(null);
