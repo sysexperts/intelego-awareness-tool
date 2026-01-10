@@ -159,6 +159,7 @@ async function processEmail(email, attributes, imap, seqno) {
   }
   
   console.log(`${zipAttachments.length} ZIP-Anhang(e) gefunden`);
+  console.log('ZIP-Anhänge:', zipAttachments.map(a => a.filename).join(', '));
   
   // Identifiziere Kunde anhand E-Mail-Absender oder Betreff
   const customer = await identifyCustomer(email);
