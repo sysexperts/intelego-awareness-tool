@@ -164,14 +164,13 @@ async function processEmail(email, attributes, imap) {
   const customer = await identifyCustomer(email);
   
   if (!customer) {
-    console.log('Kunde konnte nicht identifiziert werden. E-Mail-Absender:', email.from.text);
-    // Markiere E-Mail trotzdem als gelesen, um Endlosschleife zu vermeiden
-    return;
+    console.log('⚠️ Kunde konnte nicht identifiziert werden. Erstelle Report ohne Kundenzuordnung.');
+    console.log('E-Mail-Absender:', email.from.text);
+  } else {
+    console.log(`Kunde identifiziert: ${customer.name} (ID: ${customer.id})`);
   }
   
-  console.log(`Kunde identifiziert: ${customer.name} (ID: ${customer.id})`);
-  
-  // Verarbeite jeden ZIP-Anhang
+  // Verarbeite jeden ZIP-Anhang (auch ohne Kundenzuordnung)
   for (const attachment of zipAttachments) {
     try {
       await processZipAttachment(attachment, customer, email);
@@ -237,7 +236,10 @@ async function identifyCustomer(email) {
 
 // Process ZIP attachment
 async function processZipAttachment(attachment, customer, email) {
-  console.log(`Verarbeite ZIP-Anhang: ${attachment.filename} für Kunde: ${customer.name}`);
+  const customerName = customer ? customer.name : 'Unbekannter Kunde';
+  const customerId = customer ? customer.id : null;
+  
+  console.log(`Verarbeite ZIP-Anhang: ${attachment.filename} für Kunde: ${customerName}`);
   
   // Speichere ZIP temporär
   const uploadsDir = path.join(__dirname, '..', 'uploads');
@@ -260,17 +262,21 @@ async function processZipAttachment(attachment, customer, email) {
     }
     
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const pdfFilename = `report_${customer.id}_${timestamp}.pdf`;
+    const pdfFilename = `report_${customerId || 'unassigned'}_${timestamp}.pdf`;
     const pdfPath = path.join(reportsDir, pdfFilename);
     
     await generatePDFReport(analysis, customer, pdfPath);
     
     // Speichere Report in Datenbank
-    const reportId = await saveReport(customer.id, analysis, pdfPath);
+    const reportId = await saveReport(customerId, analysis, pdfPath);
     
-    // Sende E-Mail an support@intelego.de
-    const emailSubject = `Monatlicher Hornetsecurity Awareness Reporting für ${customer.name}`;
-    await sendReportEmail(customer.name, pdfPath, 'support@intelego.de');
+    // E-Mail-Versand nur wenn Kunde zugeordnet ist
+    if (customer) {
+      const emailSubject = `Monatlicher Hornetsecurity Awareness Reporting für ${customer.name}`;
+      await sendReportEmail(customer.name, pdfPath, 'support@intelego.net');
+    } else {
+      console.log('⚠️ Report ohne Kundenzuordnung - E-Mail-Versand übersprungen');
+    }
     
     // Markiere E-Mail als verarbeitet in DB
     db.run(
@@ -284,15 +290,19 @@ async function processZipAttachment(attachment, customer, email) {
     );
     
     // Erstelle Notification für neuen Report
+    const notificationMessage = customer 
+      ? `Ein neuer Awareness-Report für ${customer.name} wurde automatisch aus einer E-Mail erstellt und verarbeitet.`
+      : 'Ein neuer Awareness-Report wurde automatisch aus einer E-Mail erstellt. Bitte Kunde zuweisen.';
+    
     db.run(
       `INSERT INTO notifications (type, title, message, report_id, customer_id)
        VALUES (?, ?, ?, ?, ?)`,
       [
         'new_report',
-        'Neuer Report erstellt',
-        `Ein neuer Awareness-Report für ${customer.name} wurde automatisch aus einer E-Mail erstellt und verarbeitet.`,
+        customer ? 'Neuer Report erstellt' : '⚠️ Neuer Report ohne Kunde',
+        notificationMessage,
         reportId,
-        customer.id
+        customerId
       ],
       (err) => {
         if (err) {
@@ -303,7 +313,7 @@ async function processZipAttachment(attachment, customer, email) {
       }
     );
     
-    console.log(`✓ ZIP-Datei erfolgreich verarbeitet für ${customer.name}`);
+    console.log(`✓ ZIP-Datei erfolgreich verarbeitet für ${customerName}`);
     
   } catch (error) {
     console.error('Fehler beim Verarbeiten der ZIP-Datei:', error);
@@ -323,7 +333,7 @@ function saveReport(customerId, analysis, pdfPath) {
       `INSERT INTO reports (customer_id, total_scenarios, total_users, click_rate, success_rate, risk_level, pdf_path, email_sent, source)
        VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
       [
-        customerId,
+        customerId || null,
         analysis.overview.totalScenarios,
         analysis.overview.totalUsers,
         analysis.overview.clickRate,

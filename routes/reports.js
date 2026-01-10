@@ -187,7 +187,7 @@ router.get('/:id/details', (req, res) => {
   db.get(`
     SELECT r.*, c.name as customer_name 
     FROM reports r 
-    JOIN customers c ON r.customer_id = c.id 
+    LEFT JOIN customers c ON r.customer_id = c.id 
     WHERE r.id = ?
   `, [id], (err, report) => {
     if (err) {
@@ -208,6 +208,87 @@ router.get('/:id/details', (req, res) => {
         scenarios
       });
     });
+  });
+});
+
+// Assign customer to report
+router.post('/:id/assign-customer', (req, res) => {
+  const { id } = req.params;
+  const { customerId } = req.body;
+  
+  if (!customerId) {
+    return res.status(400).json({ error: 'Kunden-ID erforderlich' });
+  }
+  
+  db.run(
+    'UPDATE reports SET customer_id = ? WHERE id = ?',
+    [customerId, id],
+    function(err) {
+      if (err) {
+        console.error('Fehler beim Zuweisen des Kunden:', err);
+        return res.status(500).json({ error: 'Fehler beim Zuweisen des Kunden' });
+      }
+      
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Report nicht gefunden' });
+      }
+      
+      res.json({ success: true, message: 'Kunde erfolgreich zugewiesen' });
+    }
+  );
+});
+
+// Send report email
+router.post('/:id/send-email', (req, res) => {
+  const { id } = req.params;
+  
+  db.get(`
+    SELECT r.*, c.name as customer_name 
+    FROM reports r 
+    LEFT JOIN customers c ON r.customer_id = c.id 
+    WHERE r.id = ?
+  `, [id], async (err, report) => {
+    if (err) {
+      return res.status(500).json({ error: 'Datenbankfehler' });
+    }
+    
+    if (!report) {
+      return res.status(404).json({ error: 'Report nicht gefunden' });
+    }
+    
+    if (!report.customer_id) {
+      return res.status(400).json({ error: 'Bitte zuerst einen Kunden zuweisen' });
+    }
+    
+    try {
+      const emailResult = await sendReportEmail(
+        report.customer_name, 
+        report.pdf_path, 
+        'support@intelego.net'
+      );
+      
+      if (emailResult.sent) {
+        db.run(
+          'UPDATE reports SET email_sent = 1 WHERE id = ?',
+          [id],
+          (err) => {
+            if (err) {
+              console.error('Fehler beim Aktualisieren des E-Mail-Status:', err);
+            }
+          }
+        );
+        
+        res.json({ 
+          success: true, 
+          message: `Report erfolgreich an support@intelego.net versendet (Betreff: Monatlicher Hornetsecurity Awareness Reporting für ${report.customer_name})` 
+        });
+      } else {
+        res.status(500).json({ error: 'E-Mail konnte nicht versendet werden' });
+      }
+    } catch (error) {
+      console.error('Fehler beim E-Mail-Versand:', error);
+      res.status(500).json({ error: 'Fehler beim E-Mail-Versand: ' + error.message });
+    }
   });
 });
 

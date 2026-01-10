@@ -185,13 +185,14 @@ async function loadReports() {
         const response = await fetch('/api/reports');
         allReports = await response.json();
         
-        // Lade Kunden für Filter
+        displayReports(allReports);
         await loadCustomersForFilter();
         
-        // Zeige alle Reports initial
-        displayReports(allReports);
+        // Befülle Kunden-Dropdowns für Reports ohne Kunde
+        setTimeout(() => populateCustomerDropdowns(), 100);
     } catch (error) {
         console.error('Fehler beim Laden der Reports:', error);
+        document.getElementById('reportsList').innerHTML = '<p class="error-message">Fehler beim Laden der Reports</p>';
     }
 }
 
@@ -232,11 +233,24 @@ function displayReports(reportsToDisplay) {
             minute: '2-digit'
         });
         
+        const customerSection = report.customer_id 
+            ? `<div class="report-customer-name">${report.customer_name}</div>`
+            : `<div class="report-customer-assign">
+                <select id="customerSelect-${report.id}" class="customer-select">
+                    <option value="">⚠️ Kunde zuweisen...</option>
+                </select>
+                <button onclick="assignCustomer(${report.id})" class="btn btn-secondary btn-sm">Zuweisen</button>
+               </div>`;
+        
+        const emailButton = report.customer_id && !report.email_sent
+            ? `<button onclick="sendReportEmail(${report.id})" class="btn btn-success btn-sm">📧 E-Mail senden</button>`
+            : '';
+        
         return `
             <div class="report-card">
                 <div class="report-header">
                     <div class="report-customer-info">
-                        <div class="report-customer-name">${report.customer_name}</div>
+                        ${customerSection}
                         <div class="report-date">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -271,6 +285,7 @@ function displayReports(reportsToDisplay) {
                     <div class="report-actions">
                         ${report.source === 'email' ? '<span class="badge-auto">🤖 Automatischer Report</span>' : '<span class="badge-manual">👤 Manueller Report</span>'}
                         ${report.email_sent ? '<span class="badge-success">✓ E-Mail versendet</span>' : ''}
+                        ${emailButton}
                         <a href="/api/reports/download/${report.id}" class="btn btn-primary btn-sm">PDF Download</a>
                     </div>
                 </div>
@@ -516,6 +531,77 @@ window.onclick = function(event) {
     const modal = document.getElementById('addCustomerModal');
     if (event.target === modal) {
         closeAddCustomerModal();
+    }
+}
+
+// Assign customer to report
+async function assignCustomer(reportId) {
+    const selectElement = document.getElementById(`customerSelect-${reportId}`);
+    const customerId = selectElement.value;
+    
+    if (!customerId) {
+        alert('Bitte wählen Sie einen Kunden aus');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/reports/${reportId}/assign-customer`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customerId })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✓ Kunde erfolgreich zugewiesen!');
+            loadReports();
+        } else {
+            alert('Fehler: ' + data.error);
+        }
+    } catch (error) {
+        alert('Fehler beim Zuweisen des Kunden: ' + error.message);
+    }
+}
+
+// Send report email
+async function sendReportEmail(reportId) {
+    if (!confirm('Report per E-Mail an support@intelego.net senden?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/reports/${reportId}/send-email`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✓ ' + data.message);
+            loadReports();
+        } else {
+            alert('Fehler: ' + data.error);
+        }
+    } catch (error) {
+        alert('Fehler beim E-Mail-Versand: ' + error.message);
+    }
+}
+
+// Populate customer dropdowns in reports
+async function populateCustomerDropdowns() {
+    try {
+        const response = await fetch('/api/customers');
+        const customers = await response.json();
+        
+        document.querySelectorAll('.customer-select').forEach(select => {
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">⚠️ Kunde zuweisen...</option>' + 
+                customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            select.value = currentValue;
+        });
+    } catch (error) {
+        console.error('Fehler beim Laden der Kunden für Dropdowns:', error);
     }
 }
 

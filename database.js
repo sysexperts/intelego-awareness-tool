@@ -82,7 +82,7 @@ db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS reports (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      customer_id INTEGER NOT NULL,
+      customer_id INTEGER,
       upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
       total_scenarios INTEGER,
       total_users INTEGER,
