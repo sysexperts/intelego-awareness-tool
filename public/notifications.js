@@ -108,7 +108,7 @@ function renderNotifications(notifications) {
     }
     
     list.innerHTML = notifications.map(notification => {
-        const date = new Date(notification.created_at);
+        const date = new Date(notification.created_at + 'Z');
         const timeAgo = getTimeAgo(date);
         const unreadClass = notification.is_read ? '' : 'unread';
         
@@ -120,6 +120,12 @@ function renderNotifications(notifications) {
                 </div>
                 <div class="notification-message">${notification.message}</div>
                 ${notification.customer_name ? `<span class="notification-customer">${notification.customer_name}</span>` : ''}
+                <button class="notification-delete" onclick="event.stopPropagation(); deleteNotification(${notification.id})">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
             </div>
         `;
     }).join('');
@@ -143,6 +149,19 @@ async function handleNotificationClick(notificationId, reportId) {
         document.querySelectorAll('.nav-item')[2].classList.add('active');
         document.getElementById('reportsTab').classList.add('active');
         loadReports();
+    }
+}
+
+// Delete notification
+async function deleteNotification(notificationId) {
+    try {
+        const response = await fetch(`/api/notifications/${notificationId}`, { method: 'DELETE' });
+        if (response.ok) {
+            await checkForNewNotifications();
+            await loadNotifications();
+        }
+    } catch (error) {
+        console.error('Fehler beim Löschen der Notification:', error);
     }
 }
 

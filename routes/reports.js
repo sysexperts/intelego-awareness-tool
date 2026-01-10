@@ -277,12 +277,38 @@ router.post('/:id/send-email', (req, res) => {
           }
         );
         
+        // Erstelle Notification für erfolgreichen E-Mail-Versand
+        db.run(
+          `INSERT INTO notifications (type, title, message, report_id, customer_id)
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            'email_sent',
+            '✓ E-Mail erfolgreich versendet',
+            `Der Report für ${report.customer_name} wurde erfolgreich per E-Mail versendet.`,
+            id,
+            report.customer_id
+          ]
+        );
+        
         res.json({ 
           success: true, 
-          message: `Report erfolgreich an support@intelego.net versendet (Betreff: Monatlicher Hornetsecurity Awareness Reporting für ${report.customer_name})` 
+          message: `Report erfolgreich versendet` 
         });
       } else {
-        res.status(500).json({ error: 'E-Mail konnte nicht versendet werden' });
+        // Erstelle Notification für fehlgeschlagenen E-Mail-Versand
+        db.run(
+          `INSERT INTO notifications (type, title, message, report_id, customer_id)
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            'email_failed',
+            '✗ E-Mail-Versand fehlgeschlagen',
+            `Der Report für ${report.customer_name} konnte nicht versendet werden: ${emailResult.reason || 'Unbekannter Fehler'}`,
+            id,
+            report.customer_id
+          ]
+        );
+        
+        res.status(500).json({ error: 'E-Mail konnte nicht versendet werden: ' + (emailResult.reason || 'Unbekannter Fehler') });
       }
     } catch (error) {
       console.error('Fehler beim E-Mail-Versand:', error);

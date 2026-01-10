@@ -342,7 +342,34 @@ async function processZipAttachment(attachment, customer, email) {
     
     // E-Mail-Versand nur wenn Kunde zugeordnet ist
     if (customer) {
-      await sendReportEmail(customer.name, pdfPath);
+      const emailResult = await sendReportEmail(customer.name, pdfPath);
+      
+      // Erstelle Notification für E-Mail-Versand
+      if (emailResult.sent) {
+        db.run(
+          `INSERT INTO notifications (type, title, message, report_id, customer_id)
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            'email_sent',
+            '✓ E-Mail erfolgreich versendet',
+            `Der Report für ${customer.name} wurde erfolgreich per E-Mail versendet.`,
+            reportId,
+            customerId
+          ]
+        );
+      } else {
+        db.run(
+          `INSERT INTO notifications (type, title, message, report_id, customer_id)
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            'email_failed',
+            '✗ E-Mail-Versand fehlgeschlagen',
+            `Der Report für ${customer.name} konnte nicht versendet werden: ${emailResult.reason || 'Unbekannter Fehler'}`,
+            reportId,
+            customerId
+          ]
+        );
+      }
     } else {
       console.log('⚠️ Report ohne Kundenzuordnung - E-Mail-Versand übersprungen');
     }
