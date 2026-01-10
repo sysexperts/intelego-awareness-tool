@@ -1,17 +1,35 @@
 const nodemailer = require('nodemailer');
 const config = require('../config');
+const db = require('../database');
 
 async function sendReportEmail(customerName, pdfPath, recipientEmail) {
-  if (!config.email.auth.user || !config.email.auth.pass) {
+  // Lade SMTP-Einstellungen aus Datenbank
+  const settings = await new Promise((resolve, reject) => {
+    db.get('SELECT * FROM email_settings WHERE id = 1', (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+  
+  // Prüfe ob SMTP konfiguriert ist
+  if (!settings || !settings.smtp_host || !settings.smtp_username || !settings.smtp_password) {
     console.warn('E-Mail-Konfiguration nicht vollständig. E-Mail wird nicht versendet.');
     return { sent: false, reason: 'E-Mail nicht konfiguriert' };
   }
   
   try {
-    const transporter = nodemailer.createTransport(config.email);
+    const transporter = nodemailer.createTransport({
+      host: settings.smtp_host,
+      port: settings.smtp_port || 587,
+      secure: settings.smtp_port === 465,
+      auth: {
+        user: settings.smtp_username,
+        pass: settings.smtp_password
+      }
+    });
     
     const mailOptions = {
-      from: config.email.from,
+      from: settings.smtp_from || config.email.from,
       to: recipientEmail,
       subject: `Phishing-Analyse Report - ${customerName}`,
       html: `

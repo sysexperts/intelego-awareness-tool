@@ -272,6 +272,40 @@
                         <small>Wie oft soll das Postfach geprüft werden? (5-1440 Minuten)</small>
                     </div>
                     
+                    <h3 style="margin: 32px 0 16px 0; color: var(--primary-color); font-size: 1.2rem; border-top: 1px solid #e0e0e0; padding-top: 24px;">SMTP-Einstellungen für E-Mail-Versand</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="smtpHost">SMTP Server</label>
+                            <input type="text" id="smtpHost" placeholder="smtp.gmail.com">
+                            <small>SMTP-Server-Adresse für E-Mail-Versand</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="smtpPort">SMTP Port</label>
+                            <input type="number" id="smtpPort" placeholder="587" value="587">
+                            <small>Standard: 587 (STARTTLS) oder 465 (SSL)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="smtpUsername">SMTP Benutzername</label>
+                            <input type="text" id="smtpUsername" placeholder="noreply@firma.de">
+                            <small>Benutzername für SMTP-Authentifizierung</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="smtpPassword">SMTP Passwort</label>
+                            <input type="password" id="smtpPassword" placeholder="••••••••">
+                            <small>Passwort oder App-Passwort für SMTP</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="smtpFrom">Absender-Adresse</label>
+                        <input type="email" id="smtpFrom" placeholder="noreply@intelego.net">
+                        <small>E-Mail-Adresse, die als Absender angezeigt wird</small>
+                    </div>
+                    
                     <div class="checkbox-group">
                         <label class="checkbox-label">
                             <input type="checkbox" id="monitoringEnabled">

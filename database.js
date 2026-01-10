@@ -119,9 +119,35 @@ db.serialize(() => {
       check_interval INTEGER DEFAULT 15,
       monitoring_enabled BOOLEAN DEFAULT 0,
       last_check DATETIME,
+      smtp_host TEXT,
+      smtp_port INTEGER DEFAULT 587,
+      smtp_username TEXT,
+      smtp_password TEXT,
+      smtp_from TEXT,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Add SMTP columns to existing email_settings table if they don't exist
+  db.all("PRAGMA table_info(email_settings)", (err, columns) => {
+    if (err) return;
+    const columnNames = columns.map(col => col.name);
+    if (!columnNames.includes('smtp_host')) {
+      db.run("ALTER TABLE email_settings ADD COLUMN smtp_host TEXT");
+    }
+    if (!columnNames.includes('smtp_port')) {
+      db.run("ALTER TABLE email_settings ADD COLUMN smtp_port INTEGER DEFAULT 587");
+    }
+    if (!columnNames.includes('smtp_username')) {
+      db.run("ALTER TABLE email_settings ADD COLUMN smtp_username TEXT");
+    }
+    if (!columnNames.includes('smtp_password')) {
+      db.run("ALTER TABLE email_settings ADD COLUMN smtp_password TEXT");
+    }
+    if (!columnNames.includes('smtp_from')) {
+      db.run("ALTER TABLE email_settings ADD COLUMN smtp_from TEXT");
+    }
+  });
 
   db.run(`
     CREATE TABLE IF NOT EXISTS scenario_stats (

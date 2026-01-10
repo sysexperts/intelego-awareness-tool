@@ -29,14 +29,19 @@ router.get('/', (req, res) => {
       emailPassword: row.email_password,
       monitoringFolder: row.monitoring_folder,
       checkInterval: row.check_interval,
-      monitoringEnabled: row.monitoring_enabled === 1
+      monitoringEnabled: row.monitoring_enabled === 1,
+      smtpHost: row.smtp_host,
+      smtpPort: row.smtp_port,
+      smtpUsername: row.smtp_username,
+      smtpPassword: row.smtp_password,
+      smtpFrom: row.smtp_from
     });
   });
 });
 
 // POST/UPDATE email settings
 router.post('/', (req, res) => {
-  const { imapHost, imapPort, emailUsername, emailPassword, monitoringFolder, checkInterval, monitoringEnabled } = req.body;
+  const { imapHost, imapPort, emailUsername, emailPassword, monitoringFolder, checkInterval, monitoringEnabled, smtpHost, smtpPort, smtpUsername, smtpPassword, smtpFrom } = req.body;
   
   if (!imapHost || !imapPort || !emailUsername || !emailPassword) {
     return res.status(400).json({ error: 'IMAP-Server, Port, E-Mail und Passwort sind erforderlich' });
@@ -52,11 +57,12 @@ router.post('/', (req, res) => {
       ? `UPDATE email_settings SET 
           imap_host = ?, imap_port = ?, email_username = ?, email_password = ?,
           monitoring_folder = ?, check_interval = ?, monitoring_enabled = ?,
+          smtp_host = ?, smtp_port = ?, smtp_username = ?, smtp_password = ?, smtp_from = ?,
           updated_at = CURRENT_TIMESTAMP
          WHERE id = 1`
       : `INSERT INTO email_settings (id, imap_host, imap_port, email_username, email_password, 
-          monitoring_folder, check_interval, monitoring_enabled)
-         VALUES (1, ?, ?, ?, ?, ?, ?, ?)`;
+          monitoring_folder, check_interval, monitoring_enabled, smtp_host, smtp_port, smtp_username, smtp_password, smtp_from)
+         VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     
     db.run(sql, [
       imapHost,
@@ -65,7 +71,12 @@ router.post('/', (req, res) => {
       emailPassword,
       monitoringFolder || 'INBOX',
       checkInterval || 15,
-      monitoringEnabled ? 1 : 0
+      monitoringEnabled ? 1 : 0,
+      smtpHost || null,
+      smtpPort || 587,
+      smtpUsername || null,
+      smtpPassword || null,
+      smtpFrom || null
     ], function(err) {
       if (err) {
         console.error('Fehler beim Speichern der Einstellungen:', err);

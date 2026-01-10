@@ -13,6 +13,12 @@ async function loadEmailSettings() {
             document.getElementById('monitoringFolder').value = settings.monitoringFolder || 'INBOX';
             document.getElementById('checkInterval').value = settings.checkInterval || 15;
             document.getElementById('monitoringEnabled').checked = settings.monitoringEnabled || false;
+            
+            document.getElementById('smtpHost').value = settings.smtpHost || '';
+            document.getElementById('smtpPort').value = settings.smtpPort || 587;
+            document.getElementById('smtpUsername').value = settings.smtpUsername || '';
+            document.getElementById('smtpPassword').value = settings.smtpPassword || '';
+            document.getElementById('smtpFrom').value = settings.smtpFrom || '';
         }
     } catch (error) {
         console.error('Fehler beim Laden der E-Mail-Einstellungen:', error);
@@ -78,7 +84,12 @@ document.getElementById('emailSettingsForm').addEventListener('submit', async (e
         emailPassword: document.getElementById('emailPassword').value,
         monitoringFolder: document.getElementById('monitoringFolder').value,
         checkInterval: parseInt(document.getElementById('checkInterval').value),
-        monitoringEnabled: document.getElementById('monitoringEnabled').checked
+        monitoringEnabled: document.getElementById('monitoringEnabled').checked,
+        smtpHost: document.getElementById('smtpHost').value,
+        smtpPort: parseInt(document.getElementById('smtpPort').value),
+        smtpUsername: document.getElementById('smtpUsername').value,
+        smtpPassword: document.getElementById('smtpPassword').value,
+        smtpFrom: document.getElementById('smtpFrom').value
     };
     
     try {
