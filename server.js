@@ -11,6 +11,7 @@ const customerRoutes = require('./routes/customers');
 const reportRoutes = require('./routes/reports');
 const emailSettingsRoutes = require('./routes/email-settings');
 const notificationsRoutes = require('./routes/notifications');
+const emailCheckRoutes = require('./routes/email-check');
 
 // Initialize email monitor (auto-starts if enabled)
 require('./services/emailMonitor');
@@ -39,6 +40,7 @@ app.use('/api/customers', requireAuth, customerRoutes);
 app.use('/api/reports', requireAuth, reportRoutes);
 app.use('/api/email-settings', requireAuth, emailSettingsRoutes);
 app.use('/api/notifications', requireAuth, notificationsRoutes);
+app.use('/api/email-check', requireAuth, emailCheckRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Intelego Awareness Tool is running' });

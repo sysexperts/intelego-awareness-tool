@@ -607,6 +607,45 @@ async function populateCustomerDropdowns() {
     }
 }
 
+// Manual email check
+async function checkEmailsNow() {
+    const btn = document.getElementById('checkEmailsBtn');
+    const originalText = btn.innerHTML;
+    
+    // Disable button and show loading state
+    btn.disabled = true;
+    btn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; animation: spin 1s linear infinite;">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        Prüfe E-Mails...
+    `;
+    
+    try {
+        const response = await fetch('/api/email-check/check-now', {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✓ ' + data.message);
+            // Reload reports to show new ones
+            loadReports();
+        } else {
+            alert('Fehler: ' + data.error + (data.details ? '\n' + data.details : ''));
+        }
+    } catch (error) {
+        alert('Fehler beim Prüfen der E-Mails: ' + error.message);
+    } finally {
+        // Restore button
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
 checkAuth().then(authenticated => {
     if (authenticated) {
         loadCustomers();

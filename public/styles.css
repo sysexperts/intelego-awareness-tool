@@ -1943,6 +1943,15 @@ textarea:focus {
     flex: 1;
 }
 
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .toast-title {
     font-weight: 600;
     color: var(--text-color);

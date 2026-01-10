@@ -424,8 +424,37 @@ db.get('SELECT * FROM email_settings WHERE id = 1 AND monitoring_enabled = 1', (
   }
 });
 
+// Manual check function for API endpoint
+async function checkNow() {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT * FROM email_settings WHERE id = 1', async (err, settings) => {
+      if (err) {
+        return reject({ error: 'Datenbankfehler', details: err.message });
+      }
+      
+      if (!settings) {
+        return reject({ error: 'Keine E-Mail-Einstellungen gefunden' });
+      }
+      
+      if (!settings.monitoring_enabled) {
+        return reject({ error: 'E-Mail-Monitoring ist nicht aktiviert' });
+      }
+      
+      try {
+        console.log('🔍 Manuelle E-Mail-Prüfung gestartet...');
+        await checkEmails();
+        resolve({ success: true, message: 'E-Mail-Postfach erfolgreich geprüft' });
+      } catch (error) {
+        console.error('Fehler bei manueller E-Mail-Prüfung:', error);
+        reject({ error: 'Fehler bei E-Mail-Prüfung', details: error.message });
+      }
+    });
+  });
+}
+
 module.exports = {
   start,
   stop,
+  checkNow,
   isMonitoring: () => isMonitoring
 };
