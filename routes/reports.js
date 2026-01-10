@@ -292,4 +292,41 @@ router.post('/:id/send-email', (req, res) => {
   });
 });
 
+// Delete report
+router.delete('/:id', (req, res) => {
+  const { id } = req.params;
+  
+  db.get('SELECT * FROM reports WHERE id = ?', [id], (err, report) => {
+    if (err) {
+      return res.status(500).json({ error: 'Datenbankfehler' });
+    }
+    
+    if (!report) {
+      return res.status(404).json({ error: 'Report nicht gefunden' });
+    }
+    
+    // Lösche PDF-Datei
+    if (report.pdf_path && fs.existsSync(report.pdf_path)) {
+      try {
+        fs.unlinkSync(report.pdf_path);
+      } catch (error) {
+        console.error('Fehler beim Löschen der PDF-Datei:', error);
+      }
+    }
+    
+    // Lösche Report aus Datenbank
+    db.run('DELETE FROM reports WHERE id = ?', [id], function(err) {
+      if (err) {
+        return res.status(500).json({ error: 'Fehler beim Löschen des Reports' });
+      }
+      
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Report nicht gefunden' });
+      }
+      
+      res.json({ success: true, message: 'Report erfolgreich gelöscht' });
+    });
+  });
+});
+
 module.exports = router;

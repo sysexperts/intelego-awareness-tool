@@ -287,6 +287,7 @@ function displayReports(reportsToDisplay) {
                         ${report.email_sent ? '<span class="badge-success">✓ E-Mail versendet</span>' : ''}
                         ${emailButton}
                         <a href="/api/reports/download/${report.id}" class="btn btn-primary btn-sm">PDF Download</a>
+                        <button onclick="deleteReport(${report.id})" class="btn btn-danger btn-sm">🗑️ Löschen</button>
                     </div>
                 </div>
             </div>
@@ -604,6 +605,30 @@ async function populateCustomerDropdowns() {
         });
     } catch (error) {
         console.error('Fehler beim Laden der Kunden für Dropdowns:', error);
+    }
+}
+
+// Delete report
+async function deleteReport(reportId) {
+    if (!confirm('Möchten Sie diesen Report wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/reports/${reportId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✓ ' + data.message);
+            loadReports();
+        } else {
+            alert('Fehler: ' + data.error);
+        }
+    } catch (error) {
+        alert('Fehler beim Löschen des Reports: ' + error.message);
     }
 }
 
