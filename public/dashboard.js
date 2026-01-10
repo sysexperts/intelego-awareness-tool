@@ -616,17 +616,24 @@ async function deleteReport(reportId) {
     
     try {
         const response = await fetch(`/api/reports/${reportId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            credentials: 'same-origin'
         });
         
-        const data = await response.json();
-        
-        if (response.ok) {
-            alert('✓ ' + data.message);
-            loadReports();
-        } else {
-            alert('Fehler: ' + data.error);
+        if (!response.ok) {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                alert('Fehler: ' + data.error);
+            } else {
+                alert('Fehler beim Löschen des Reports (Status: ' + response.status + ')');
+            }
+            return;
         }
+        
+        const data = await response.json();
+        alert('✓ ' + data.message);
+        loadReports();
     } catch (error) {
         alert('Fehler beim Löschen des Reports: ' + error.message);
     }
