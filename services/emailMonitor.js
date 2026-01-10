@@ -112,7 +112,7 @@ async function checkForNewEmails(settings) {
           msg.once('end', async () => {
             try {
               const parsed = await simpleParser(buffer);
-              await processEmail(parsed, attributes, imap);
+              await processEmail(parsed, attributes, imap, seqno);
             } catch (error) {
               console.error('Fehler beim Verarbeiten der E-Mail:', error);
             }
@@ -140,7 +140,7 @@ async function checkForNewEmails(settings) {
 }
 
 // Process individual email
-async function processEmail(email, attributes, imap) {
+async function processEmail(email, attributes, imap, seqno) {
   console.log('Verarbeite E-Mail:', email.subject);
   
   // Prüfe ob E-Mail ZIP-Anhänge hat
@@ -170,13 +170,22 @@ async function processEmail(email, attributes, imap) {
     console.log(`Kunde identifiziert: ${customer.name} (ID: ${customer.id})`);
   }
   
-  // Verarbeite jeden ZIP-Anhang (auch ohne Kundenzuordnung)
-  for (const attachment of zipAttachments) {
-    try {
-      await processZipAttachment(attachment, customer, email);
-    } catch (error) {
-      console.error('Fehler beim Verarbeiten des ZIP-Anhangs:', error);
+  // Verarbeite nur den ersten ZIP-Anhang (verhindert doppelte Reports)
+  try {
+    await processZipAttachment(zipAttachments[0], customer, email);
+    
+    // Markiere E-Mail als gelesen nach erfolgreicher Verarbeitung
+    if (imap && seqno) {
+      imap.addFlags(seqno, ['\\Seen'], (err) => {
+        if (err) {
+          console.error('Fehler beim Markieren der E-Mail als gelesen:', err);
+        } else {
+          console.log('✓ E-Mail als gelesen markiert');
+        }
+      });
     }
+  } catch (error) {
+    console.error('Fehler beim Verarbeiten des ZIP-Anhangs:', error);
   }
 }
 
