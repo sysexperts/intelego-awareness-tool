@@ -63,11 +63,11 @@ async function generatePDFReport(analysis, customer, outputPath) {
       const overview = analysis.overview;
       const riskColor = getRiskColor(overview.sicherheitsbewertung);
       
-      // DSGVO-Einstellungen aus Kundendaten
-      const customerName = customer.name;
-      const showUserEmails = customer.pdf_show_user_emails !== 0;
-      const showUserNames = customer.pdf_show_user_names !== 0;
-      const showDetailedStats = customer.pdf_show_detailed_stats !== 0;
+      // DSGVO-Einstellungen aus Kundendaten (mit Fallback für Reports ohne Kunde)
+      const customerName = customer ? customer.name : 'Unbekannter Kunde';
+      const showUserEmails = customer ? (customer.pdf_show_user_emails !== 0) : false;
+      const showUserNames = customer ? (customer.pdf_show_user_names !== 0) : false;
+      const showDetailedStats = customer ? (customer.pdf_show_detailed_stats !== 0) : false;
       
       // ==================== TITELSEITE ====================
       let yPos = 100;
